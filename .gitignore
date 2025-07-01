@@ -1,0 +1,23 @@
+# .gradle/
+build/
+*.iml
+*.ipr
+*.iws
+.idea/
+local.properties
+*.log
+.DS_Store
+node_modules/
+dist/
+.env
+*.keystore
+*.jks
+
+# Android
+androidApp/build/
+shared/build/
+backend/build/
+
+# Database
+*.db
+*.sqlite
