@@ -39,32 +39,86 @@ chitfund-app/
 ## 🔧 Getting Started
 
 ### Prerequisites
-- JDK 8 or higher
-- Android SDK (for Android development)
+- JDK 17 or higher
 - PostgreSQL (for backend)
+- Android SDK (for Android development - currently blocked by connectivity)
 
 ### Building the Project
 
+#### Option 1: Full Build (requires internet access to Google Maven)
 ```bash
-# Build all modules
+# Build all modules including Android
 ./gradlew build
 
-# Build Android app
+# Build Android debug APK
 ./gradlew :androidApp:assembleDebug
+```
 
-# Build backend
-./gradlew :backend:build
+#### Option 2: Backend Only Build (works offline)
+```bash
+# Build shared module and backend
+./gradlew :shared:build :backend:build
+
+# Run all tests
+./gradlew :shared:test :backend:test
 ```
 
 ### Running the Backend
 
+#### Using Gradle
 ```bash
-# Using Docker Compose
-docker-compose up
-
-# Or run directly
 ./gradlew :backend:run
 ```
+
+#### Using Docker Compose
+```bash
+docker-compose up
+```
+
+#### Manual Setup
+```bash
+# Set up PostgreSQL database
+createdb chitfund
+
+# Set environment variable (optional, defaults to localhost)
+export DATABASE_URL="jdbc:postgresql://localhost:5432/chitfund"
+
+# Run the backend
+./gradlew :backend:run
+```
+
+### Testing the API
+
+The backend provides a complete REST API. Here are some example requests:
+
+```bash
+# Test basic connectivity
+curl http://localhost:8080
+
+# Initiate login (check server logs for OTP)
+curl -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com"}'
+
+# Verify OTP (use OTP from server logs)
+curl -X POST http://localhost:8080/api/v1/auth/verify-otp \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "otp": "123456"}'
+
+# Create a chit
+curl -X POST http://localhost:8080/api/v1/chits \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Family Savings",
+    "fundAmount": 100000000000,
+    "tenure": 12,
+    "memberCount": 10,
+    "startMonth": "2024-02",
+    "payoutMethod": "RANDOM"
+  }'
+```
+
+See `IMPLEMENTATION_STATUS.md` for complete API documentation and testing instructions.
 
 ## 🧱 Architecture
 

@@ -5,22 +5,24 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.chitfund.shared.data.*
+import com.chitfund.shared.utils.Result
+import com.chitfund.backend.services.UserService
 
 fun Route.userRoutes() {
+    val userService = UserService()
+    
     route("/users") {
         get("/profile") {
-            // TODO: Get authenticated user profile
-            val user = User(
-                id = "user-123",
-                email = "john@example.com",
-                mobile = "+1234567890",
-                name = "John Doe",
-                isEmailVerified = true,
-                isMobileVerified = true,
-                createdAt = "2024-01-01T00:00:00Z"
-            )
+            val userId = "user-123" // TODO: Get from auth token
             
-            call.respond(HttpStatusCode.OK, ApiResponse(success = true, data = user))
+            when (val result = userService.getUserProfile(userId)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse(success = true, data = result.data))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.NotFound, ApiResponse<User>(success = false, message = result.message))
+                }
+            }
         }
     }
 }

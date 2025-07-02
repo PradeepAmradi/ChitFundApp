@@ -6,6 +6,7 @@ import com.chitfund.backend.db.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import java.time.LocalDateTime
 
 class ChitService {
     
@@ -42,7 +43,7 @@ class ChitService {
                     payoutMethod = request.payoutMethod,
                     moderatorId = moderatorId,
                     status = ChitStatus.OPEN,
-                    createdAt = java.time.LocalDateTime.now().toString()
+                    createdAt = LocalDateTime.now().toString()
                 )
                 
                 Result.Success(chit)
@@ -85,6 +86,120 @@ class ChitService {
             }
         } catch (e: Exception) {
             Result.Error("Failed to get chits: ${e.message}")
+        }
+    }
+    
+    fun getChitById(chitId: String): Result<Chit> {
+        return try {
+            transaction {
+                val row = Chits.select { Chits.id eq UUID.fromString(chitId) }.firstOrNull()
+                    ?: return@transaction Result.Error("Chit not found")
+                
+                val chit = Chit(
+                    id = row[Chits.id].toString(),
+                    name = row[Chits.name],
+                    fundAmount = row[Chits.fundAmount],
+                    tenure = row[Chits.tenure],
+                    memberCount = row[Chits.memberCount],
+                    startMonth = row[Chits.startMonth],
+                    endMonth = row[Chits.endMonth],
+                    payoutMethod = when (row[Chits.payoutMethod]) {
+                        PayoutMethodDb.RANDOM -> PayoutMethod.RANDOM
+                        PayoutMethodDb.VOTING -> PayoutMethod.VOTING
+                    },
+                    moderatorId = row[Chits.moderatorId].toString(),
+                    status = when (row[Chits.status]) {
+                        ChitStatusDb.OPEN -> ChitStatus.OPEN
+                        ChitStatusDb.ACTIVE -> ChitStatus.ACTIVE
+                        ChitStatusDb.CLOSED -> ChitStatus.CLOSED
+                    },
+                    createdAt = row[Chits.createdAt].toString()
+                )
+                
+                Result.Success(chit)
+            }
+        } catch (e: Exception) {
+            Result.Error("Failed to get chit: ${e.message}")
+        }
+    }
+    
+    fun inviteMember(chitId: String, request: InviteMemberRequest): Result<String> {
+        return try {
+            transaction {
+                // Verify chit exists and is in OPEN status
+                val chit = Chits.select { Chits.id eq UUID.fromString(chitId) }.firstOrNull()
+                    ?: return@transaction Result.Error("Chit not found")
+                
+                if (chit[Chits.status] != ChitStatusDb.OPEN) {
+                    return@transaction Result.Error("Chit is not open for new members")
+                }
+                
+                // Check if member limit reached
+                val currentMemberCount = ChitMembers.select { ChitMembers.chitId eq UUID.fromString(chitId) }.count()
+                if (currentMemberCount >= chit[Chits.memberCount]) {
+                    return@transaction Result.Error("Chit member limit reached")
+                }
+                
+                // Find user by email or mobile
+                val identifier = request.email ?: request.mobile ?: return@transaction Result.Error("Email or mobile required")
+                val user = if (request.email != null) {
+                    Users.select { Users.email eq request.email }.firstOrNull()
+                } else {
+                    Users.select { Users.mobile eq request.mobile!! }.firstOrNull()
+                } ?: return@transaction Result.Error("User not found")
+                
+                val userId = user[Users.id]
+                
+                // Check if user already invited/joined
+                val existingMember = ChitMembers.select { 
+                    (ChitMembers.chitId eq UUID.fromString(chitId)) and (ChitMembers.userId eq userId)
+                }.firstOrNull()
+                
+                if (existingMember != null) {
+                    return@transaction Result.Error("User already invited to this chit")
+                }
+                
+                // Add member with INVITED status
+                ChitMembers.insert {
+                    it[this.chitId] = UUID.fromString(chitId)
+                    it[this.userId] = userId
+                    it[status] = MemberStatusDb.INVITED
+                }
+                
+                Result.Success("Invitation sent successfully")
+            }
+        } catch (e: Exception) {
+            Result.Error("Failed to send invitation: ${e.message}")
+        }
+    }
+    
+    fun joinChit(chitId: String, userId: String): Result<String> {
+        return try {
+            transaction {
+                // Check if user was invited
+                val invitation = ChitMembers.select {
+                    (ChitMembers.chitId eq UUID.fromString(chitId)) and 
+                    (ChitMembers.userId eq UUID.fromString(userId))
+                }.firstOrNull() ?: return@transaction Result.Error("No invitation found")
+                
+                when (invitation[ChitMembers.status]) {
+                    MemberStatusDb.INVITED -> {
+                        // Update status to JOINED
+                        ChitMembers.update({
+                            (ChitMembers.chitId eq UUID.fromString(chitId)) and 
+                            (ChitMembers.userId eq UUID.fromString(userId))
+                        }) {
+                            it[status] = MemberStatusDb.JOINED
+                        }
+                        Result.Success("Successfully joined chit")
+                    }
+                    MemberStatusDb.JOINED -> Result.Error("Already joined this chit")
+                    MemberStatusDb.APPROVED -> Result.Error("Already approved for this chit")
+                    MemberStatusDb.REJECTED -> Result.Error("Invitation was rejected")
+                }
+            }
+        } catch (e: Exception) {
+            Result.Error("Failed to join chit: ${e.message}")
         }
     }
     

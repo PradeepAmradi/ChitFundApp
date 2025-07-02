@@ -6,13 +6,34 @@ import com.chitfund.backend.db.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.*
+import java.time.LocalDateTime
+import kotlin.random.Random
 
 class AuthService {
     
+    private val otpStore = mutableMapOf<String, OtpData>()
+    
+    data class OtpData(
+        val otp: String,
+        val createdAt: LocalDateTime,
+        val expiresAt: LocalDateTime
+    )
+    
     fun initiateLogin(request: LoginRequest): Result<String> {
         return try {
-            // TODO: Implement actual OTP generation and sending
-            // For now, return success
+            // Generate 6-digit OTP
+            val otp = generateOtp()
+            val now = LocalDateTime.now()
+            val expiresAt = now.plusMinutes(10) // OTP expires in 10 minutes
+            
+            val key = request.email ?: request.mobile ?: return Result.Error("Email or mobile required")
+            
+            // Store OTP (in production, this would be stored in Redis or similar)
+            otpStore[key] = OtpData(otp, now, expiresAt)
+            
+            // In production, send OTP via email/SMS
+            println("Generated OTP for $key: $otp") // Debug log
+            
             Result.Success("OTP sent successfully")
         } catch (e: Exception) {
             Result.Error("Failed to send OTP: ${e.message}")
@@ -21,9 +42,23 @@ class AuthService {
     
     fun verifyOtp(request: VerifyOtpRequest): Result<AuthResponse> {
         return try {
+            val key = request.email ?: request.mobile ?: return Result.Error("Email or mobile required")
+            val storedOtpData = otpStore[key] ?: return Result.Error("OTP not found or expired")
+            
+            // Check OTP validity
+            if (storedOtpData.expiresAt.isBefore(LocalDateTime.now())) {
+                otpStore.remove(key)
+                return Result.Error("OTP has expired")
+            }
+            
+            if (storedOtpData.otp != request.otp) {
+                return Result.Error("Invalid OTP")
+            }
+            
+            // Remove OTP after successful verification
+            otpStore.remove(key)
+            
             transaction {
-                // TODO: Implement actual OTP verification
-                // For now, create or get user
                 val user = if (request.email != null) {
                     findOrCreateUserByEmail(request.email)
                 } else if (request.mobile != null) {
@@ -32,8 +67,8 @@ class AuthService {
                     return@transaction Result.Error("Email or mobile required")
                 }
                 
-                // TODO: Generate actual JWT token
-                val token = "dummy-jwt-token-${UUID.randomUUID()}"
+                // Generate JWT token (simplified - in production use proper JWT library)
+                val token = generateJwtToken(user.id)
                 
                 Result.Success(
                     AuthResponse(
@@ -46,6 +81,15 @@ class AuthService {
         } catch (e: Exception) {
             Result.Error("Failed to verify OTP: ${e.message}")
         }
+    }
+    
+    private fun generateOtp(): String {
+        return Random.nextInt(100000, 999999).toString()
+    }
+    
+    private fun generateJwtToken(userId: String): String {
+        // Simplified token generation - in production, use proper JWT library like jose4j
+        return "chitfund_token_${userId}_${System.currentTimeMillis()}"
     }
     
     private fun findOrCreateUserByEmail(email: String): User {

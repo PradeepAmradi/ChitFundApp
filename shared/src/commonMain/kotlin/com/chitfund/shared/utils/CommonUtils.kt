@@ -18,9 +18,9 @@ object Validators {
     }
     
     fun isValidChitAmount(amount: Long): Boolean {
-        // Amount should be in multiples of ₹1L (10,000,000 paisa) and max ₹50L
+        // Amount should be in multiples of ₹1L (100,000,000,000 paisa) and max ₹50L
         return amount > 0 && 
-               amount % 1000000000L == 0L && 
+               amount % 100000000000L == 0L && 
                amount <= 5000000000000L // ₹50L in paisa
     }
     
@@ -52,7 +52,7 @@ object DateUtils {
         val year = parts[0].toInt()
         val month = parts[1].toInt()
         
-        val totalMonths = (year * 12 + month - 1) + tenure
+        val totalMonths = (year * 12 + month - 1) + tenure - 1 // tenure includes the start month
         val endYear = totalMonths / 12
         val endMonth = (totalMonths % 12) + 1
         
@@ -65,7 +65,7 @@ object DateUtils {
     }
     
     fun formatLargeCurrency(amountInPaisa: Long): String {
-        val amountInLakhs = amountInPaisa / 10000000000.0 // Convert to lakhs
+        val amountInLakhs = amountInPaisa / 100000000000.0 // Based on max value: 5000000000000L paisa = ₹50L
         return "₹${String.format("%.1f", amountInLakhs)}L"
     }
 }
