@@ -1,12 +1,10 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
-    jvm()
-    androidTarget {
+    jvm {
         compilations.all {
             kotlinOptions {
                 jvmTarget = "1.8"
@@ -31,23 +29,5 @@ kotlin {
         }
         val jvmMain by getting
         val jvmTest by getting
-        val androidMain by getting {
-            dependencies {
-                implementation(libs.ktor.client.okhttp)
-            }
-        }
-        val androidUnitTest by getting
-    }
-}
-
-android {
-    namespace = "com.chitfund.shared"
-    compileSdk = 34
-    defaultConfig {
-        minSdk = 24
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
     }
 }

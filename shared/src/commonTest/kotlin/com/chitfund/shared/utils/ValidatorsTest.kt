@@ -27,9 +27,9 @@ class ValidatorsTest {
     
     @Test
     fun testChitAmountValidation() {
-        assertTrue(Validators.isValidChitAmount(1000000000L)) // ₹1L
+        assertTrue(Validators.isValidChitAmount(100000000000L)) // ₹1L
         assertTrue(Validators.isValidChitAmount(5000000000000L)) // ₹50L
-        assertFalse(Validators.isValidChitAmount(500000000L)) // ₹0.5L
+        assertFalse(Validators.isValidChitAmount(50000000000L)) // ₹0.5L
         assertFalse(Validators.isValidChitAmount(6000000000000L)) // ₹60L
         assertFalse(Validators.isValidChitAmount(0L))
     }
@@ -69,7 +69,7 @@ class DateUtilsTest {
     
     @Test
     fun testFormatLargeCurrency() {
-        assertEquals("₹1.0L", DateUtils.formatLargeCurrency(1000000000L))
+        assertEquals("₹1.0L", DateUtils.formatLargeCurrency(100000000000L))
         assertEquals("₹50.0L", DateUtils.formatLargeCurrency(5000000000000L))
     }
 }
