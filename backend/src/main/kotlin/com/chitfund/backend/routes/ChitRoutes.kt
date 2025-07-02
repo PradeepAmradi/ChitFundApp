@@ -6,84 +6,89 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.chitfund.shared.data.*
+import com.chitfund.shared.utils.Result
+import com.chitfund.backend.services.ChitService
 
 fun Route.chitRoutes() {
+    val chitService = ChitService()
+    
     route("/chits") {
         get {
-            // TODO: Get chits for authenticated user
-            val chits = listOf<Chit>()
-            call.respond(HttpStatusCode.OK, ApiResponse(success = true, data = chits))
+            // For now, return empty list - implement proper auth later
+            val userId = "user-123" // TODO: Get from auth token
+            when (val result = chitService.getChitsByUser(userId)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse(success = true, data = result.data))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<List<Chit>>(success = false, message = result.message))
+                }
+            }
         }
         
         post {
             val request = call.receive<CreateChitRequest>()
+            val moderatorId = "user-123" // TODO: Get from auth token
             
-            // TODO: Create new chit
-            val chit = Chit(
-                id = "chit-123",
-                name = request.name,
-                fundAmount = request.fundAmount,
-                tenure = request.tenure,
-                memberCount = request.memberCount,
-                startMonth = request.startMonth,
-                endMonth = calculateEndMonth(request.startMonth, request.tenure),
-                payoutMethod = request.payoutMethod,
-                moderatorId = "user-123", // TODO: Get from auth
-                status = ChitStatus.OPEN,
-                createdAt = "2024-01-01T00:00:00Z"
-            )
-            
-            call.respond(HttpStatusCode.Created, ApiResponse(success = true, data = chit))
+            when (val result = chitService.createChit(request, moderatorId)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.Created, ApiResponse(success = true, data = result.data))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<Chit>(success = false, message = result.message))
+                }
+            }
         }
         
         get("/{id}") {
-            val chitId = call.parameters["id"]
-            
-            // TODO: Get chit by ID
-            val chit = Chit(
-                id = chitId ?: "",
-                name = "Sample Chit",
-                fundAmount = 1000000000L, // ₹10L
-                tenure = 12,
-                memberCount = 10,
-                startMonth = "2024-01",
-                endMonth = "2024-12",
-                payoutMethod = PayoutMethod.RANDOM,
-                moderatorId = "user-123",
-                status = ChitStatus.OPEN,
-                createdAt = "2024-01-01T00:00:00Z"
+            val chitId = call.parameters["id"] ?: return@get call.respond(
+                HttpStatusCode.BadRequest, 
+                ApiResponse<String>(success = false, message = "Chit ID required")
             )
             
-            call.respond(HttpStatusCode.OK, ApiResponse(success = true, data = chit))
+            when (val result = chitService.getChitById(chitId)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse(success = true, data = result.data))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.NotFound, ApiResponse<Chit>(success = false, message = result.message))
+                }
+            }
         }
         
         post("/{id}/invite") {
-            val chitId = call.parameters["id"]
+            val chitId = call.parameters["id"] ?: return@post call.respond(
+                HttpStatusCode.BadRequest,
+                ApiResponse<String>(success = false, message = "Chit ID required")
+            )
             val request = call.receive<InviteMemberRequest>()
             
-            // TODO: Send invitation
-            call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = "Invitation sent"))
+            when (val result = chitService.inviteMember(chitId, request)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = "Invitation sent"))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
+                }
+            }
         }
         
         post("/{id}/join") {
-            val chitId = call.parameters["id"]
+            val chitId = call.parameters["id"] ?: return@post call.respond(
+                HttpStatusCode.BadRequest,
+                ApiResponse<String>(success = false, message = "Chit ID required")
+            )
             val request = call.receive<JoinChitRequest>()
+            val userId = "user-123" // TODO: Get from auth token
             
-            // TODO: Add member to chit
-            call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = "Joined chit successfully"))
+            when (val result = chitService.joinChit(chitId, userId)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = "Joined chit successfully"))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
+                }
+            }
         }
     }
-}
-
-private fun calculateEndMonth(startMonth: String, tenure: Int): String {
-    // Simple calculation - in real implementation, use proper date handling
-    val parts = startMonth.split("-")
-    val year = parts[0].toInt()
-    val month = parts[1].toInt()
-    
-    val endMonth = month + tenure - 1
-    val endYear = if (endMonth > 12) year + (endMonth - 1) / 12 else year
-    val finalMonth = if (endMonth > 12) ((endMonth - 1) % 12) + 1 else endMonth
-    
-    return "$endYear-${finalMonth.toString().padStart(2, '0')}"
 }

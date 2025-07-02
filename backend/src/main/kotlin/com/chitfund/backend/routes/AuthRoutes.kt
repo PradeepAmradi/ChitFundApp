@@ -6,40 +6,37 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.chitfund.shared.data.*
+import com.chitfund.shared.utils.Result
+import com.chitfund.backend.services.AuthService
 
 fun Route.authRoutes() {
+    val authService = AuthService()
+    
     route("/auth") {
         post("/login") {
             val request = call.receive<LoginRequest>()
             
-            // TODO: Implement OTP generation and sending
-            val response = AuthResponse(
-                success = true,
-                message = "OTP sent successfully"
-            )
-            
-            call.respond(HttpStatusCode.OK, response)
+            when (val result = authService.initiateLogin(request)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse(success = true, message = result.data))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
+                }
+            }
         }
         
         post("/verify-otp") {
             val request = call.receive<VerifyOtpRequest>()
             
-            // TODO: Implement OTP verification
-            val response = AuthResponse(
-                success = true,
-                token = "dummy-jwt-token",
-                user = User(
-                    id = "user-123",
-                    email = request.email ?: "",
-                    mobile = request.mobile ?: "",
-                    name = "John Doe",
-                    isEmailVerified = true,
-                    isMobileVerified = true,
-                    createdAt = "2024-01-01T00:00:00Z"
-                )
-            )
-            
-            call.respond(HttpStatusCode.OK, response)
+            when (val result = authService.verifyOtp(request)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, result.data)
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
+                }
+            }
         }
     }
 }
