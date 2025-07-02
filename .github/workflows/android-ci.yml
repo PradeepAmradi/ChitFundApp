@@ -1,4 +1,4 @@
-name: Android CI
+name: CI Build
 
 on:
   push:
@@ -7,6 +7,8 @@ on:
     branches: [ main ]
 
 jobs:
+  # Note: Android builds are currently disabled due to network restrictions
+  # preventing access to dl.google.com (Android Gradle Plugin repository)
   build:
     runs-on: ubuntu-latest
     
@@ -37,20 +39,6 @@ jobs:
       
     - name: Run tests
       run: ./gradlew test
-      
-    - name: Build Android Debug APK
-      run: ./gradlew assembleDebug
-      
-    - name: Build Android Release APK
-      run: ./gradlew assembleRelease
-      
-    - name: Upload APK artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: APKs
-        path: |
-          androidApp/build/outputs/apk/debug/*.apk
-          androidApp/build/outputs/apk/release/*.apk
           
   backend-build:
     runs-on: ubuntu-latest
