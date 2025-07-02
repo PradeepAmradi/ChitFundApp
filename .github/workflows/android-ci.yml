@@ -20,7 +20,7 @@ jobs:
         distribution: 'temurin'
         
     - name: Cache Gradle packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -45,7 +45,7 @@ jobs:
       run: ./gradlew assembleRelease
       
     - name: Upload APK artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: APKs
         path: |
@@ -65,7 +65,7 @@ jobs:
         distribution: 'temurin'
         
     - name: Cache Gradle packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
@@ -87,7 +87,7 @@ jobs:
       run: ./gradlew :backend:buildFatJar
       
     - name: Upload backend artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Backend-JAR
         path: backend/build/libs/*.jar
