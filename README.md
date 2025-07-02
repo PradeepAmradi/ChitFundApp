@@ -41,26 +41,25 @@ chitfund-app/
 ### Prerequisites
 - JDK 17 or higher
 - PostgreSQL (for backend)
-- Android SDK (for Android development - currently blocked by connectivity)
+- Android SDK (for Android development)
 
 ### Building the Project
 
-#### Option 1: Full Build (requires internet access to Google Maven)
 ```bash
 # Build all modules including Android
 ./gradlew build
 
 # Build Android debug APK
 ./gradlew :androidApp:assembleDebug
-```
 
-#### Option 2: Backend Only Build (works offline)
-```bash
-# Build shared module and backend
+# Build Android release APK
+./gradlew :androidApp:assembleRelease
+
+# Build backend only
 ./gradlew :shared:build :backend:build
 
 # Run all tests
-./gradlew :shared:test :backend:test
+./gradlew test
 ```
 
 ### Running the Backend
