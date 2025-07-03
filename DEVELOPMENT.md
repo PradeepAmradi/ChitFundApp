@@ -35,6 +35,17 @@ createdb chitfund
 adb install androidApp/build/outputs/apk/debug/androidApp-debug.apk
 ```
 
+### 5. Azure Deployment
+```bash
+# Deploy backend to Azure
+./deploy-azure.sh
+
+# Verify deployment
+./verify-azure-deployment.sh
+
+# CI/CD pipeline will automatically deploy on push to main
+```
+
 ## Architecture Overview
 
 ### Shared Module
@@ -59,7 +70,12 @@ adb install androidApp/build/outputs/apk/debug/androidApp-debug.apk
 2. **Testing**: Write unit tests and integration tests
 3. **Code Review**: Submit pull requests for review
 4. **CI/CD**: GitHub Actions runs tests and builds
-5. **Deployment**: Deploy to staging and production
+5. **Deployment**: Automated deployment to Azure on merge to main
+
+### Azure Deployment Pipeline
+- **Automatic**: Triggered on push to main branch
+- **Manual**: Can be triggered via GitHub Actions UI
+- **Stages**: Build → Test → Docker Image → Azure Deploy
 
 ## API Development
 

@@ -21,3 +21,7 @@ backend/build/
 # Database
 *.db
 *.sqlite
+
+# Azure deployment logs
+azure-deployment.log
+*.azurecreds
