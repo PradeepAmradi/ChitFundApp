@@ -142,6 +142,30 @@ See `IMPLEMENTATION_STATUS.md` for complete API documentation and testing instru
 ### Users
 - `GET /api/v1/users/profile` - Get user profile
 
+## ☁️ Azure Deployment
+
+The backend can be deployed to Azure using the provided infrastructure setup:
+
+### Quick Deploy to Azure
+```bash
+# 1. Login to Azure CLI
+az login
+
+# 2. Run the deployment script
+./deploy-azure.sh
+
+# 3. Configure GitHub secrets and push to main branch
+# The CI/CD pipeline will automatically deploy your app
+```
+
+### Azure Infrastructure
+- **Azure Container Registry** for Docker images
+- **Azure Database for PostgreSQL** for data storage  
+- **Azure Web App for Containers** for hosting
+- **GitHub Actions** for automated CI/CD
+
+See [`AZURE_DEPLOYMENT.md`](AZURE_DEPLOYMENT.md) for detailed setup instructions.
+
 ## 🔮 Future Enhancements
 
 - Web app with Compose Multiplatform
