@@ -16,6 +16,11 @@ chitfund-app/
 │   ├── services/          # Business logic
 │   ├── db/                # Database schema & migrations
 │   └── plugins/           # Ktor plugins configuration
+├── web/                   # Web application (HTML/CSS/JS)
+│   ├── css/               # Stylesheets
+│   ├── js/                # JavaScript modules
+│   ├── index.html         # Main HTML file
+│   └── server.py          # Development server
 ├── .github/workflows/     # CI/CD Pipelines
 └── README.md
 ```
@@ -32,6 +37,7 @@ chitfund-app/
 ### Technical Features
 - **Kotlin Multiplatform**: Shared business logic across platforms
 - **Android Native**: Jetpack Compose UI
+- **Web Application**: Modern HTML/CSS/JavaScript web app
 - **Backend API**: Ktor-based REST API
 - **Database**: PostgreSQL with Exposed ORM
 - **CI/CD**: GitHub Actions for automated builds
@@ -86,6 +92,44 @@ export DATABASE_URL="jdbc:postgresql://localhost:5432/chitfund"
 ./gradlew :backend:run
 ```
 
+### Running the Web Application
+
+The web application provides a modern interface for managing chit funds with features like authentication, dashboard, and chit management.
+
+#### Quick Start (Demo Mode)
+```bash
+# Navigate to web directory
+cd web
+
+# Start the development server
+python3 server.py
+
+# Open browser to http://localhost:3000
+```
+
+#### With Backend Integration
+```bash
+# 1. Start the backend server (in project root)
+./gradlew :backend:run
+
+# 2. Configure API connection (in web/js/api.js)
+# Set useMockData: false to connect to backend
+
+# 3. Start the web server (in web directory)
+cd web
+python3 server.py
+
+# 4. Open browser to http://localhost:3000
+```
+
+#### Web App Features
+- **Authentication**: Email-based OTP login system
+- **Dashboard**: Overview of chits and statistics  
+- **Chit Management**: Create, view, and manage chit funds
+- **Member Management**: Invite and manage chit members
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Mock Data Mode**: Runs standalone for demo purposes
+
 ### Testing the API
 
 The backend provides a complete REST API. Here are some example requests:
@@ -123,6 +167,7 @@ See `IMPLEMENTATION_STATUS.md` for complete API documentation and testing instru
 
 - **Shared Module**: Contains data models and business logic
 - **Android App**: Jetpack Compose UI with MVVM architecture
+- **Web Application**: Modern HTML/CSS/JavaScript single-page application
 - **Backend**: Ktor server with RESTful APIs
 - **Database**: PostgreSQL with Exposed ORM
 
