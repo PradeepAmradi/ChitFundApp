@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChitFund Management</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=2.3">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -86,6 +86,16 @@
                             <button class="nav-btn" data-page="create-chit">
                                 <i class="fas fa-plus"></i> Create Chit
                             </button>
+                            <button class="nav-btn" data-page="settings">
+                                <i class="fas fa-cog"></i> Settings
+                            </button>
+                            <div class="mock-toggle-container">
+                                <label class="mock-toggle">
+                                    <input type="checkbox" id="mockDataToggle" checked>
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">Mock Data</span>
+                                </label>
+                            </div>
                             <button class="nav-btn" id="logout-btn">
                                 <i class="fas fa-sign-out-alt"></i> Logout
                             </button>
@@ -97,6 +107,7 @@
             <!-- Main Content -->
             <main class="main-content">
                 <div class="container">
+                    <div id="connection-warning" class="error-message hidden" style="margin-bottom: 20px;"></div>
                     <div id="content-area">
                         <!-- Content will be loaded here -->
                     </div>

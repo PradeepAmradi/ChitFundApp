@@ -2,8 +2,67 @@
 const API_CONFIG = {
     baseURL: 'http://localhost:8080/api/v1',
     timeout: 10000,
-    useMockData: true // Set to false when backend is available
+    get useMockData() {
+        // Get from localStorage, default to true if not set
+        const saved = localStorage.getItem('useMockData');
+        return saved !== null ? JSON.parse(saved) : true;
+    },
+    set useMockData(value) {
+        localStorage.setItem('useMockData', JSON.stringify(value));
+    }
 };
+
+// Shared token management
+class TokenManager {
+    static getToken() {
+        return localStorage.getItem('authToken');
+    }
+    
+    static setToken(token) {
+        localStorage.setItem('authToken', token);
+    }
+    
+    static clearToken() {
+        localStorage.removeItem('authToken');
+    }
+}
+
+// Configuration management
+class ConfigManager {
+    static getConfig() {
+        return {
+            baseURL: localStorage.getItem('apiBaseURL') || API_CONFIG.baseURL,
+            timeout: parseInt(localStorage.getItem('apiTimeout')) || API_CONFIG.timeout,
+            useMockData: API_CONFIG.useMockData
+        };
+    }
+    
+    static setBaseURL(url) {
+        localStorage.setItem('apiBaseURL', url);
+        API_CONFIG.baseURL = url;
+    }
+    
+    static setTimeout(timeout) {
+        localStorage.setItem('apiTimeout', timeout.toString());
+        API_CONFIG.timeout = timeout;
+    }
+    
+    static toggleMockData() {
+        API_CONFIG.useMockData = !API_CONFIG.useMockData;
+        // Dispatch event for UI updates
+        window.dispatchEvent(new CustomEvent('configChanged', {
+            detail: { useMockData: API_CONFIG.useMockData }
+        }));
+        return API_CONFIG.useMockData;
+    }
+    
+    static setMockData(value) {
+        API_CONFIG.useMockData = value;
+        window.dispatchEvent(new CustomEvent('configChanged', {
+            detail: { useMockData: API_CONFIG.useMockData }
+        }));
+    }
+}
 
 // Mock data for development/demo purposes
 const MOCK_DATA = {
@@ -66,7 +125,8 @@ const MOCK_DATA = {
 // API utility functions
 class ApiClient {
     constructor() {
-        this.token = localStorage.getItem('authToken');
+        // Always get the latest token from storage
+        this.getToken = () => TokenManager.getToken();
     }
 
     async request(endpoint, options = {}) {
@@ -75,8 +135,9 @@ class ApiClient {
             return this.handleMockRequest(endpoint, options);
         }
 
-        const url = `${API_CONFIG.baseURL}${endpoint}`;
-        const config = {
+        const config = ConfigManager.getConfig();
+        const url = `${config.baseURL}${endpoint}`;
+        const requestConfig = {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -86,29 +147,44 @@ class ApiClient {
         };
 
         // Add auth token if available
-        if (this.token) {
-            config.headers['Authorization'] = `Bearer ${this.token}`;
+        const token = this.getToken();
+        if (token) {
+            requestConfig.headers['Authorization'] = `Bearer ${token}`;
         }
 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
+            const timeoutId = setTimeout(() => controller.abort(), config.timeout);
 
             const response = await fetch(url, {
-                ...config,
+                ...requestConfig,
                 signal: controller.signal
             });
 
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                // Handle specific HTTP errors
+                if (response.status === 401) {
+                    throw new Error('Unauthorized - Please login again');
+                } else if (response.status === 403) {
+                    throw new Error('Access forbidden');
+                } else if (response.status === 404) {
+                    throw new Error('Resource not found');
+                } else if (response.status === 500) {
+                    throw new Error('Server error - Please try again later');
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
             }
 
             return await response.json();
         } catch (error) {
             if (error.name === 'AbortError') {
-                throw new Error('Request timeout');
+                throw new Error('Request timeout - Check your connection or try mock data mode');
+            } else if (error.name === 'TypeError') {
+                // Network error (e.g., server not running)
+                throw new Error('Cannot connect to server - Please check if the backend is running or switch to mock data mode');
             }
             throw error;
         }
@@ -137,7 +213,8 @@ class ApiClient {
         }
         
         if (endpoint === '/users/profile' && method === 'GET') {
-            if (!this.token) {
+            const token = this.getToken();
+            if (!token) {
                 throw new Error('Unauthorized');
             }
             return {
@@ -147,7 +224,8 @@ class ApiClient {
         }
         
         if (endpoint === '/chits' && method === 'GET') {
-            if (!this.token) {
+            const token = this.getToken();
+            if (!token) {
                 throw new Error('Unauthorized');
             }
             return {
@@ -157,7 +235,8 @@ class ApiClient {
         }
         
         if (endpoint === '/chits' && method === 'POST') {
-            if (!this.token) {
+            const token = this.getToken();
+            if (!token) {
                 throw new Error('Unauthorized');
             }
             const newChit = {
@@ -233,13 +312,11 @@ class ApiClient {
     }
 
     setToken(token) {
-        this.token = token;
-        localStorage.setItem('authToken', token);
+        TokenManager.setToken(token);
     }
 
     clearToken() {
-        this.token = null;
-        localStorage.removeItem('authToken');
+        TokenManager.clearToken();
     }
 }
 
@@ -284,3 +361,7 @@ class ChitAPI extends ApiClient {
 // Export API instances
 const authAPI = new AuthAPI();
 const chitAPI = new ChitAPI();
+
+// Make instances available globally for token synchronization
+window.authAPI = authAPI;
+window.chitAPI = chitAPI;

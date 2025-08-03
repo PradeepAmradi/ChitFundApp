@@ -2,12 +2,18 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.ktor)
     alias(libs.plugins.kotlinSerialization)
+    application
 }
 
 kotlin {
     jvm {
-        jvmToolchain(8)
+        jvmToolchain(17)
         withJava()
+        compilations.all {
+            kotlinOptions {
+                jvmTarget = "17"
+            }
+        }
     }
     
     sourceSets {
@@ -39,7 +45,13 @@ kotlin {
 }
 
 application {
-    mainClass.set("com.chitfund.backend.ApplicationKt")
+    mainClass.set("io.ktor.server.netty.EngineMain")
+    applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
+}
+
+// Configure the run task to use the JVM target
+tasks.named("run") {
+    dependsOn("jvmJar")
 }
 
 ktor {

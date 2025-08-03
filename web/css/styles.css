@@ -499,3 +499,267 @@ body {
     margin-bottom: 30px;
     font-size: 18px;
 }
+
+/* Mock data toggle */
+.mock-toggle-container {
+    margin: 0 15px;
+    display: flex;
+    align-items: center;
+}
+
+.mock-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 14px;
+    color: #fff;
+}
+
+.mock-toggle input[type="checkbox"] {
+    display: none !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+}
+
+.toggle-slider {
+    position: relative;
+    width: 60px;
+    height: 30px;
+    background-color: #ccc;
+    border-radius: 30px;
+    transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    margin-right: 10px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.toggle-slider:before {
+    content: "";
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-color: white;
+    top: 2px;
+    left: 2px;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mock-toggle input:checked + .toggle-slider {
+    background-color: #34c759; /* iOS green color */
+}
+
+.mock-toggle input:checked + .toggle-slider:before {
+    transform: translateX(30px);
+}
+
+/* Add subtle scale animation on toggle */
+.mock-toggle input:checked + .toggle-slider:before {
+    transform: translateX(30px) scale(1.05);
+    animation: toggleBounce 0.2s ease-out;
+}
+
+@keyframes toggleBounce {
+    0% { transform: translateX(30px) scale(1); }
+    50% { transform: translateX(30px) scale(1.1); }
+    100% { transform: translateX(30px) scale(1.05); }
+}
+
+.mock-toggle:hover .toggle-slider {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(52, 199, 89, 0.1);
+}
+
+.mock-toggle input:checked:hover + .toggle-slider {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(52, 199, 89, 0.2);
+}
+
+/* Disabled state */
+.mock-toggle.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mock-toggle.disabled .toggle-slider {
+    background-color: #f1f1f1;
+}
+
+.mock-toggle.disabled input:checked + .toggle-slider {
+    background-color: #a8e6cf;
+}
+
+.toggle-label {
+    font-size: 13px;
+    opacity: 1;
+    font-weight: 500;
+    user-select: none;
+    color: inherit;
+    white-space: nowrap;
+    margin-left: 5px;
+}
+
+/* Focus and accessibility states */
+.mock-toggle input:focus + .toggle-slider {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+.mock-toggle input:focus:checked + .toggle-slider {
+    outline: 2px solid #34c759;
+    outline-offset: 2px;
+}
+
+/* Active/pressed state */
+.mock-toggle:active .toggle-slider:before {
+    transform: scale(0.95);
+}
+
+.mock-toggle input:checked:active + .toggle-slider:before {
+    transform: translateX(30px) scale(0.95);
+}
+
+/* Mobile touch improvements */
+@media (hover: none) and (pointer: coarse) {
+    .mock-toggle {
+        padding: 8px;
+        margin: -8px;
+    }
+    
+    .mock-toggle:hover .toggle-slider {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .mock-toggle input:checked:hover + .toggle-slider {
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Data mode indicator */
+.data-mode-indicator {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.data-mode-indicator.mock {
+    background: rgba(255, 193, 7, 0.1);
+    color: #856404;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.data-mode-indicator.live {
+    background: rgba(40, 167, 69, 0.1);
+    color: #155724;
+    border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+/* Settings page styles */
+.settings-section {
+    margin-bottom: 30px;
+}
+
+.settings-section h3 {
+    margin-bottom: 15px;
+    color: #333;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+.settings-group {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.settings-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.settings-row:last-child {
+    margin-bottom: 0;
+}
+
+.settings-label {
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+}
+
+.settings-control {
+    flex: 2;
+    max-width: 300px;
+}
+
+.settings-description {
+    font-size: 14px;
+    color: #666;
+    margin-top: 5px;
+}
+
+/* Settings page toggles */
+.settings-group .mock-toggle {
+    color: #333;
+}
+
+.settings-group .toggle-label {
+    color: #333;
+    font-weight: 600;
+}
+
+.settings-group .toggle-slider {
+    background-color: #e9ecef;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.settings-group .mock-toggle input:checked + .toggle-slider {
+    background-color: #007bff;
+}
+
+.settings-group .mock-toggle:hover .toggle-slider {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.settings-group .mock-toggle input:checked:hover + .toggle-slider {
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15), 0 0 0 3px rgba(0, 123, 255, 0.2);
+}
+
+/* Connection status indicator */
+.connection-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.connection-status.connected {
+    background: rgba(40, 167, 69, 0.1);
+    color: #155724;
+}
+
+.connection-status.disconnected {
+    background: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+}
+
+.connection-status.testing {
+    background: rgba(255, 193, 7, 0.1);
+    color: #856404;
+}
+
+.connection-status i {
+    margin-right: 4px;
+}

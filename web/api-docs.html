@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChitFund API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .nav {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .nav button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav button:hover {
+            background: #e9ecef;
+        }
+
+        .nav button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .endpoint-header {
+            background: #e9ecef;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.3s ease;
+        }
+
+        .endpoint-header:hover {
+            background: #dee2e6;
+        }
+
+        .method {
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: white;
+            margin-right: 15px;
+        }
+
+        .method.get { background: #28a745; }
+        .method.post { background: #007bff; }
+        .method.put { background: #ffc107; color: #212529; }
+        .method.delete { background: #dc3545; }
+
+        .endpoint-path {
+            font-family: monospace;
+            font-size: 1.1rem;
+            color: #495057;
+        }
+
+        .endpoint-body {
+            padding: 20px;
+            display: none;
+        }
+
+        .endpoint-body.active {
+            display: block;
+        }
+
+        .description {
+            color: #6c757d;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .request-section, .response-section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #495057;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .response-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .response-status {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .response-status.success { color: #28a745; }
+        .response-status.error { color: #dc3545; }
+
+        .response-body {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .base-url-section {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .base-url-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 15px;
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .parameter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav button {
+                display: block;
+                width: 100%;
+                margin-bottom: 5px;
+                margin-right: 0;
+            }
+        }
+
+        .arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .arrow.rotated {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 ChitFund API</h1>
+            <p>Interactive API Documentation & Testing Interface</p>
+        </div>
+
+        <div class="nav">
+            <button class="active" onclick="showSection('auth')">Authentication</button>
+            <button onclick="showSection('users')">Users</button>
+            <button onclick="showSection('chits')">Chits</button>
+        </div>
+
+        <div class="content">
+            <div class="base-url-section">
+                <div class="base-url-label">Base URL:</div>
+                <input type="text" id="baseUrl" class="form-control" value="http://localhost:8080" placeholder="Enter API base URL">
+            </div>
+
+            <!-- Authentication Section -->
+            <div id="auth-section" class="section active">
+                <h2 style="margin-bottom: 30px; color: #495057;">🔐 Authentication Endpoints</h2>
+                
+                <!-- Login Endpoint -->
+                <div class="endpoint">
+                    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                        <div>
+                            <span class="method post">POST</span>
+                            <span class="endpoint-path">/api/v1/auth/login</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Initiate login with email or mobile number. Sends OTP for verification.</div>
+                        
+                        <div class="request-section">
+                            <div class="section-title">Request</div>
+                            <div class="parameter-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="login-email" placeholder="user@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Mobile</label>
+                                    <input type="text" class="form-control" id="login-mobile" placeholder="+91XXXXXXXXXX">
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary" onclick="testLogin()">Try it out</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="response-section" id="login-response"></div>
+                    </div>
+                </div>
+
+                <!-- Verify OTP Endpoint -->
+                <div class="endpoint">
+                    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                        <div>
+                            <span class="method post">POST</span>
+                            <span class="endpoint-path">/api/v1/auth/verify-otp</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Verify OTP received during login process.</div>
+                        
+                        <div class="request-section">
+                            <div class="section-title">Request</div>
+                            <div class="parameter-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="verify-email" placeholder="user@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Mobile</label>
+                                    <input type="text" class="form-control" id="verify-mobile" placeholder="+91XXXXXXXXXX">
+                                </div>
+                                <div></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">OTP *</label>
+                                <input type="text" class="form-control" id="verify-otp" placeholder="123456" required>
+                            </div>
+                            <button class="btn btn-primary" onclick="testVerifyOtp()">Try it out</button>
+                        </div>
+                        
+                        <div class="response-section" id="verify-otp-response"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="section" style="display: none;">
+                <h2 style="margin-bottom: 30px; color: #495057;">👤 User Endpoints</h2>
+                
+                <!-- Get Profile Endpoint -->
+                <div class="endpoint">
+                    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                        <div>
+                            <span class="method get">GET</span>
+                            <span class="endpoint-path">/api/v1/users/profile</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get user profile information.</div>
+                        
+                        <div class="request-section">
+                            <div class="section-title">Request</div>
+                            <p style="color: #6c757d; margin-bottom: 15px;">No parameters required. Authentication token should be included in headers.</p>
+                            <button class="btn btn-primary" onclick="testGetProfile()">Try it out</button>
+                        </div>
+                        
+                        <div class="response-section" id="profile-response"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chits Section -->
+            <div id="chits-section" class="section" style="display: none;">
+                <h2 style="margin-bottom: 30px; color: #495057;">🏦 Chit Fund Endpoints</h2>
+                
+                <!-- Get Chits Endpoint -->
+                <div class="endpoint">
+                    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                        <div>
+                            <span class="method get">GET</span>
+                            <span class="endpoint-path">/api/v1/chits</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get all chits for the authenticated user.</div>
+                        
+                        <div class="request-section">
+                            <div class="section-title">Request</div>
+                            <p style="color: #6c757d; margin-bottom: 15px;">No parameters required.</p>
+                            <button class="btn btn-primary" onclick="testGetChits()">Try it out</button>
+                        </div>
+                        
+                        <div class="response-section" id="chits-response"></div>
+                    </div>
+                </div>
+
+                <!-- Create Chit Endpoint -->
+                <div class="endpoint">
+                    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                        <div>
+                            <span class="method post">POST</span>
+                            <span class="endpoint-path">/api/v1/chits</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Create a new chit fund.</div>
+                        
+                        <div class="request-section">
+                            <div class="section-title">Request</div>
+                            <div class="parameter-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Name *</label>
+                                    <input type="text" class="form-control" id="chit-name" placeholder="Monthly Savings Chit" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Fund Amount *</label>
+                                    <input type="number" class="form-control" id="chit-amount" placeholder="100000" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tenure (months) *</label>
+                                    <input type="number" class="form-control" id="chit-tenure" placeholder="12" required>
+                                </div>
+                            </div>
+                            <div class="parameter-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Member Count *</label>
+                                    <input type="number" class="form-control" id="chit-members" placeholder="10" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Start Month *</label>
+                                    <input type="month" class="form-control" id="chit-start" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Payout Method *</label>
+                                    <select class="form-control" id="chit-payout" required>
+                                        <option value="">Select method</option>
+                                        <option value="AUCTION">Auction</option>
+                                        <option value="LOTTERY">Lottery</option>
+                                        <option value="SEQUENTIAL">Sequential</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="testCreateChit()">Try it out</button>
+                        </div>
+                        
+                        <div class="response-section" id="create-chit-response"></div>
+                    </div>
+                </div>
+
+                <!-- Get Chit by ID Endpoint -->
+                <div class="endpoint">
+                    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                        <div>
+                            <span class="method get">GET</span>
+                            <span class="endpoint-path">/api/v1/chits/{id}</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get details of a specific chit fund.</div>
+                        
+                        <div class="request-section">
+                            <div class="section-title">Request</div>
+                            <div class="form-group">
+                                <label class="form-label">Chit ID *</label>
+                                <input type="text" class="form-control" id="get-chit-id" placeholder="chit-123" required>
+                            </div>
+                            <button class="btn btn-primary" onclick="testGetChitById()">Try it out</button>
+                        </div>
+                        
+                        <div class="response-section" id="get-chit-response"></div>
+                    </div>
+                </div>
+
+                <!-- Invite Member Endpoint -->
+                <div class="endpoint">
+                    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                        <div>
+                            <span class="method post">POST</span>
+                            <span class="endpoint-path">/api/v1/chits/{id}/invite</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Invite a member to join a chit fund.</div>
+                        
+                        <div class="request-section">
+                            <div class="section-title">Request</div>
+                            <div class="parameter-grid">
+                                <div class="form-group">
+                                    <label class="form-label">Chit ID *</label>
+                                    <input type="text" class="form-control" id="invite-chit-id" placeholder="chit-123" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="invite-email" placeholder="member@example.com">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Mobile</label>
+                                    <input type="text" class="form-control" id="invite-mobile" placeholder="+91XXXXXXXXXX">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="testInviteMember()">Try it out</button>
+                        </div>
+                        
+                        <div class="response-section" id="invite-response"></div>
+                    </div>
+                </div>
+
+                <!-- Join Chit Endpoint -->
+                <div class="endpoint">
+                    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+                        <div>
+                            <span class="method post">POST</span>
+                            <span class="endpoint-path">/api/v1/chits/{id}/join</span>
+                        </div>
+                        <span class="arrow">▼</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Join an existing chit fund.</div>
+                        
+                        <div class="request-section">
+                            <div class="section-title">Request</div>
+                            <div class="form-group">
+                                <label class="form-label">Chit ID *</label>
+                                <input type="text" class="form-control" id="join-chit-id" placeholder="chit-123" required>
+                            </div>
+                            <button class="btn btn-primary" onclick="testJoinChit()">Try it out</button>
+                        </div>
+                        
+                        <div class="response-section" id="join-response"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api-testing.js"></script>
+</body>
+</html>

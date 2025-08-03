@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toggle Test</title>
+    <link rel="stylesheet" href="css/styles.css?v=2.3">
+    <style>
+        body {
+            padding: 50px;
+            background: #333;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        .test-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .test-section {
+            padding: 20px;
+            border: 2px solid #555;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>iOS Toggle Test</h1>
+        
+        <div class="test-section">
+            <h3>Header Toggle (White/Green Theme)</h3>
+            <div class="mock-toggle-container">
+                <label class="mock-toggle">
+                    <input type="checkbox" id="testToggle1" checked>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Mock Data</span>
+                </label>
+            </div>
+            <p><strong>Expected:</strong> You should see "Mock Data" text next to the toggle</p>
+        </div>
+        
+        <div class="test-section" style="background: #f8f9fa; color: #333;">
+            <h3>Settings Toggle (Blue Theme)</h3>
+            <div class="settings-group">
+                <label class="mock-toggle">
+                    <input type="checkbox" id="testToggle2">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">Live Data</span>
+                </label>
+            </div>
+            <p><strong>Expected:</strong> You should see "Live Data" text next to the toggle</p>
+        </div>
+        
+        <div class="test-section">
+            <h3>Debug Info</h3>
+            <p>If you see checkbox squares instead of iOS toggles, there's a CSS loading issue.</p>
+            <button onclick="location.reload()">Reload Page</button>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('testToggle1').addEventListener('change', function(e) {
+            console.log('Toggle 1 changed:', e.target.checked);
+            document.querySelector('#testToggle1 + .toggle-slider + .toggle-label').textContent = 
+                e.target.checked ? 'Mock Data' : 'Live Data';
+        });
+        
+        document.getElementById('testToggle2').addEventListener('change', function(e) {
+            console.log('Toggle 2 changed:', e.target.checked);
+            document.querySelector('#testToggle2 + .toggle-slider + .toggle-label').textContent = 
+                e.target.checked ? 'Mock Data' : 'Live Data';
+        });
+    </script>
+</body>
+</html>

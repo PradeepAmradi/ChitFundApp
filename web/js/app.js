@@ -9,6 +9,7 @@ class App {
 
     init() {
         this.setupEventListeners();
+        this.setupConfigListeners();
         this.checkAuthStatus();
     }
 
@@ -35,10 +36,71 @@ class App {
         });
     }
 
+    setupConfigListeners() {
+        // Mock data toggle
+        const mockToggle = document.getElementById('mockDataToggle');
+        if (mockToggle) {
+            // Set initial state
+            mockToggle.checked = API_CONFIG.useMockData;
+            
+            mockToggle.addEventListener('change', async (e) => {
+                // Add visual feedback
+                this.addToggleFeedback(e.target);
+                await this.handleMockDataToggle(e.target.checked);
+            });
+        }
+
+        // Initialize toggle labels
+        this.updateToggleLabels(API_CONFIG.useMockData);
+
+        // Listen for config changes
+        window.addEventListener('configChanged', (e) => {
+            this.updateDataModeIndicators(e.detail.useMockData);
+            // Update header toggle if needed
+            const headerToggle = document.getElementById('mockDataToggle');
+            if (headerToggle) {
+                headerToggle.checked = e.detail.useMockData;
+            }
+            // Update toggle labels
+            this.updateToggleLabels(e.detail.useMockData);
+        });
+
+        // Periodic connection check when in live mode
+        setInterval(() => {
+            if (!API_CONFIG.useMockData && this.isAuthenticated) {
+                this.checkConnectionStatus();
+            }
+        }, 30000); // Check every 30 seconds
+    }
+
+    addToggleFeedback(toggleInput) {
+        const slider = toggleInput.nextElementSibling;
+        if (slider) {
+            slider.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                slider.style.transform = 'scale(1)';
+            }, 100);
+        }
+    }
+
+    async checkConnectionStatus() {
+        try {
+            await this.testBackendConnection();
+            // Connection is good
+        } catch (error) {
+            // Connection failed, show warning
+            console.warn('Backend connection lost:', error.message);
+            Utils.showError('Lost connection to backend. Consider switching to mock data mode.', 'connection-warning');
+        }
+    }
+
     async checkAuthStatus() {
         const token = localStorage.getItem('authToken');
         if (token) {
+            // Ensure all API instances have the token
             authAPI.setToken(token);
+            chitAPI.setToken(token);
+            
             if (API_CONFIG.useMockData) {
                 // For mock data, skip the profile check and use stored user
                 this.currentUser = MOCK_DATA.user;
@@ -127,6 +189,9 @@ class App {
                 case 'create-chit':
                     await this.loadCreateChit();
                     break;
+                case 'settings':
+                    await this.loadSettings();
+                    break;
                 default:
                     contentArea.innerHTML = '<h2>Page not found</h2>';
             }
@@ -157,6 +222,11 @@ class App {
 
             contentArea.innerHTML = `
                 <div class="dashboard">
+                    <div class="data-mode-indicator ${API_CONFIG.useMockData ? 'mock' : 'live'}">
+                        <i class="fas ${API_CONFIG.useMockData ? 'fa-flask' : 'fa-server'}"></i>
+                        Using ${API_CONFIG.useMockData ? 'Mock' : 'Live'} Data
+                    </div>
+                    
                     <h2>Dashboard</h2>
                     <div class="dashboard-stats">
                         <div class="stat-card">
@@ -210,8 +280,36 @@ class App {
         } catch (error) {
             console.error('Error loading dashboard:', error);
             contentArea.innerHTML = `
-                <div class="error-message">
-                    <p>Error loading dashboard: ${error.message}</p>
+                <div class="dashboard">
+                    <div class="data-mode-indicator ${API_CONFIG.useMockData ? 'mock' : 'live'}">
+                        <i class="fas ${API_CONFIG.useMockData ? 'fa-flask' : 'fa-server'}"></i>
+                        Using ${API_CONFIG.useMockData ? 'Mock' : 'Live'} Data
+                    </div>
+                    
+                    <h2>Dashboard</h2>
+                    
+                    ${!API_CONFIG.useMockData ? `
+                        <div class="empty-state">
+                            <i class="fas fa-server"></i>
+                            <h3>No Live Data Available</h3>
+                            <p>Unable to connect to the backend server or no data found.</p>
+                            <div style="margin-top: 20px;">
+                                <button class="btn btn-warning" onclick="app.switchToMockData()">
+                                    <i class="fas fa-flask"></i> Switch to Mock Data
+                                </button>
+                                <button class="btn btn-secondary" onclick="app.loadPageContent('dashboard')">
+                                    <i class="fas fa-refresh"></i> Retry
+                                </button>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="error-message">
+                            <p>Error loading dashboard: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="app.loadPageContent('dashboard')">
+                                <i class="fas fa-refresh"></i> Retry
+                            </button>
+                        </div>
+                    `}
                 </div>
             `;
         }
@@ -226,6 +324,11 @@ class App {
             
             contentArea.innerHTML = `
                 <div class="chit-list">
+                    <div class="data-mode-indicator ${API_CONFIG.useMockData ? 'mock' : 'live'}">
+                        <i class="fas ${API_CONFIG.useMockData ? 'fa-flask' : 'fa-server'}"></i>
+                        Using ${API_CONFIG.useMockData ? 'Mock' : 'Live'} Data
+                    </div>
+                    
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                         <h2>My Chits</h2>
                         <button class="btn btn-success" onclick="app.navigateToPage('create-chit')">
@@ -252,8 +355,44 @@ class App {
         } catch (error) {
             console.error('Error loading chits:', error);
             contentArea.innerHTML = `
-                <div class="error-message">
-                    <p>Error loading chits: ${error.message}</p>
+                <div class="chit-list">
+                    <div class="data-mode-indicator ${API_CONFIG.useMockData ? 'mock' : 'live'}">
+                        <i class="fas ${API_CONFIG.useMockData ? 'fa-flask' : 'fa-server'}"></i>
+                        Using ${API_CONFIG.useMockData ? 'Mock' : 'Live'} Data
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2>My Chits</h2>
+                        <button class="btn btn-success" onclick="app.navigateToPage('create-chit')">
+                            <i class="fas fa-plus"></i> Create New Chit
+                        </button>
+                    </div>
+                    
+                    ${!API_CONFIG.useMockData ? `
+                        <div class="empty-state">
+                            <i class="fas fa-server"></i>
+                            <h3>No Live Data Available</h3>
+                            <p>Unable to connect to the backend server or no chits found.</p>
+                            <div style="margin-top: 20px;">
+                                <button class="btn btn-warning" onclick="app.switchToMockData()">
+                                    <i class="fas fa-flask"></i> Switch to Mock Data
+                                </button>
+                                <button class="btn btn-secondary" onclick="app.loadPageContent('chits')">
+                                    <i class="fas fa-refresh"></i> Retry
+                                </button>
+                                <button class="btn btn-primary" onclick="app.navigateToPage('create-chit')">
+                                    <i class="fas fa-plus"></i> Create Your First Chit
+                                </button>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="error-message">
+                            <p>Error loading chits: ${error.message}</p>
+                            <button class="btn btn-primary" onclick="app.loadPageContent('chits')">
+                                <i class="fas fa-refresh"></i> Retry
+                            </button>
+                        </div>
+                    `}
                 </div>
             `;
         }
@@ -455,6 +594,310 @@ class App {
         alert(`Viewing details for chit ID: ${chitId}`);
     }
 
+    async handleMockDataToggle(useMockData) {
+        // Show loading overlay
+        this.showLoadingOverlay('Switching data mode...');
+        
+        try {
+            ConfigManager.setMockData(useMockData);
+            
+            // Update toggle labels
+            this.updateToggleLabels(useMockData);
+            
+            // If switching to live data, test connection
+            if (!useMockData) {
+                await this.testBackendConnection();
+            }
+            
+            // Reload current page content
+            await this.loadPageContent(this.currentPage);
+            
+            Utils.showSuccess(`Switched to ${useMockData ? 'mock' : 'live'} data mode`);
+        } catch (error) {
+            console.error('Error switching data mode:', error);
+            Utils.showError(`Failed to switch to live data: ${error.message}`);
+            
+            // Revert toggle state
+            const mockToggle = document.getElementById('mockDataToggle');
+            const settingsToggle = document.getElementById('settingsMockToggle');
+            if (mockToggle) {
+                mockToggle.checked = true;
+            }
+            if (settingsToggle) {
+                settingsToggle.checked = true;
+            }
+            ConfigManager.setMockData(true);
+            this.updateToggleLabels(true);
+        } finally {
+            this.hideLoadingOverlay();
+        }
+    }
+
+    updateToggleLabels(useMockData) {
+        // Update header toggle label
+        const headerLabel = document.querySelector('#mockDataToggle + .toggle-slider + .toggle-label');
+        if (headerLabel) {
+            headerLabel.textContent = useMockData ? 'Mock Data' : 'Live Data';
+        }
+        
+        // Update settings toggle label
+        const settingsLabel = document.querySelector('#settingsMockToggle + .toggle-slider + .toggle-label');
+        if (settingsLabel) {
+            settingsLabel.textContent = useMockData ? 'Mock Data' : 'Live Data';
+        }
+    }
+
+    async testBackendConnection() {
+        try {
+            // Try a simple endpoint to test connection
+            const response = await fetch(`${ConfigManager.getConfig().baseURL}/health`, {
+                method: 'GET',
+                timeout: 5000
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+        } catch (error) {
+            if (error.name === 'TypeError') {
+                throw new Error('Cannot connect to backend server. Please ensure it is running.');
+            }
+            throw error;
+        }
+    }
+
+    showLoadingOverlay(message = 'Loading...') {
+        const overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div style="text-align: center; color: white;">
+                <div class="spinner"></div>
+                <p style="margin-top: 20px;">${message}</p>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    hideLoadingOverlay() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    updateDataModeIndicators(useMockData) {
+        const indicators = document.querySelectorAll('.data-mode-indicator');
+        indicators.forEach(indicator => {
+            indicator.className = `data-mode-indicator ${useMockData ? 'mock' : 'live'}`;
+            indicator.innerHTML = `
+                <i class="fas ${useMockData ? 'fa-flask' : 'fa-server'}"></i>
+                Using ${useMockData ? 'Mock' : 'Live'} Data
+            `;
+        });
+    }
+
+    async loadSettings() {
+        const contentArea = document.getElementById('content-area');
+        const config = ConfigManager.getConfig();
+        
+        contentArea.innerHTML = `
+            <div class="settings">
+                <div class="data-mode-indicator ${API_CONFIG.useMockData ? 'mock' : 'live'}">
+                    <i class="fas ${API_CONFIG.useMockData ? 'fa-flask' : 'fa-server'}"></i>
+                    Using ${API_CONFIG.useMockData ? 'Mock' : 'Live'} Data
+                </div>
+                
+                <h2>Settings</h2>
+                
+                <div class="settings-section">
+                    <h3>Data Source</h3>
+                    <div class="settings-group">
+                        <div class="settings-row">
+                            <div class="settings-label">
+                                Data Mode
+                                <div class="settings-description">
+                                    Choose between mock data for testing or live backend data
+                                </div>
+                            </div>
+                            <div class="settings-control">
+                                <label class="mock-toggle">
+                                    <input type="checkbox" id="settingsMockToggle" ${API_CONFIG.useMockData ? 'checked' : ''}>
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">${API_CONFIG.useMockData ? 'Mock Data' : 'Live Data'}</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-row">
+                            <div class="settings-label">
+                                Connection Status
+                                <div class="settings-description">
+                                    Current status of the backend connection
+                                </div>
+                            </div>
+                            <div class="settings-control">
+                                <div id="connectionStatus" class="connection-status testing">
+                                    <i class="fas fa-circle-notch fa-spin"></i>
+                                    Testing...
+                                </div>
+                                <button class="btn btn-secondary" id="testConnectionBtn" style="margin-left: 10px;">
+                                    <i class="fas fa-plug"></i> Test Connection
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>API Configuration</h3>
+                    <div class="settings-group">
+                        <div class="settings-row">
+                            <div class="settings-label">
+                                Backend URL
+                                <div class="settings-description">
+                                    The base URL for the ChitFund backend API
+                                </div>
+                            </div>
+                            <div class="settings-control">
+                                <input type="url" id="backendUrl" class="form-control" 
+                                       value="${config.baseURL}" placeholder="http://localhost:8080/api/v1">
+                            </div>
+                        </div>
+                        
+                        <div class="settings-row">
+                            <div class="settings-label">
+                                Request Timeout
+                                <div class="settings-description">
+                                    Timeout for API requests in milliseconds
+                                </div>
+                            </div>
+                            <div class="settings-control">
+                                <input type="number" id="apiTimeout" class="form-control" 
+                                       value="${config.timeout}" min="1000" max="30000" step="1000">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-success" id="saveSettings">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                        <button class="btn btn-secondary" id="resetSettings">
+                            <i class="fas fa-undo"></i> Reset to Defaults
+                        </button>
+                        <button class="btn btn-secondary" onclick="app.navigateToPage('dashboard')">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="settings-error" class="error-message hidden"></div>
+                <div id="settings-success" class="success-message hidden"></div>
+            </div>
+        `;
+        
+        // Setup settings event listeners
+        this.setupSettingsEventListeners();
+        
+        // Test initial connection
+        this.testConnectionStatus();
+    }
+
+    setupSettingsEventListeners() {
+        // Settings mock toggle
+        const settingsToggle = document.getElementById('settingsMockToggle');
+        if (settingsToggle) {
+            settingsToggle.addEventListener('change', async (e) => {
+                // Add visual feedback
+                this.addToggleFeedback(e.target);
+                await this.handleMockDataToggle(e.target.checked);
+                // Label will be updated by handleMockDataToggle
+            });
+        }
+
+        // Test connection button
+        document.getElementById('testConnectionBtn')?.addEventListener('click', () => {
+            this.testConnectionStatus();
+        });
+
+        // Save settings
+        document.getElementById('saveSettings')?.addEventListener('click', () => {
+            this.saveSettings();
+        });
+
+        // Reset settings
+        document.getElementById('resetSettings')?.addEventListener('click', () => {
+            this.resetSettings();
+        });
+    }
+
+    async testConnectionStatus() {
+        const statusEl = document.getElementById('connectionStatus');
+        if (!statusEl) return;
+        
+        statusEl.className = 'connection-status testing';
+        statusEl.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Testing...';
+        
+        try {
+            await this.testBackendConnection();
+            statusEl.className = 'connection-status connected';
+            statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Connected';
+        } catch (error) {
+            statusEl.className = 'connection-status disconnected';
+            statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Disconnected';
+        }
+    }
+
+    saveSettings() {
+        const backendUrl = document.getElementById('backendUrl')?.value;
+        const apiTimeout = document.getElementById('apiTimeout')?.value;
+        
+        if (backendUrl) {
+            ConfigManager.setBaseURL(backendUrl);
+        }
+        
+        if (apiTimeout) {
+            ConfigManager.setTimeout(parseInt(apiTimeout));
+        }
+        
+        Utils.showSuccess('Settings saved successfully!', 'settings-success');
+        
+        // Test connection with new settings
+        setTimeout(() => {
+            this.testConnectionStatus();
+        }, 1000);
+    }
+
+    resetSettings() {
+        document.getElementById('backendUrl').value = 'http://localhost:8080/api/v1';
+        document.getElementById('apiTimeout').value = '10000';
+        
+        ConfigManager.setBaseURL('http://localhost:8080/api/v1');
+        ConfigManager.setTimeout(10000);
+        
+        Utils.showSuccess('Settings reset to defaults!', 'settings-success');
+        
+        // Test connection with default settings
+        setTimeout(() => {
+            this.testConnectionStatus();
+        }, 1000);
+    }
+
+    async switchToMockData() {
+        ConfigManager.setMockData(true);
+        const mockToggle = document.getElementById('mockDataToggle');
+        if (mockToggle) {
+            mockToggle.checked = true;
+        }
+        
+        // Reload current page
+        await this.loadPageContent(this.currentPage);
+        Utils.showSuccess('Switched to mock data mode');
+    }
+
     logout() {
         authAPI.clearToken();
         this.currentUser = null;
@@ -466,6 +909,13 @@ class App {
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Force reload CSS to avoid caching issues
+    const cssLink = document.querySelector('link[href*="styles.css"]');
+    if (cssLink) {
+        const href = cssLink.href;
+        cssLink.href = href.split('?')[0] + '?v=' + Date.now();
+    }
+    
     window.app = new App();
     
     // Hide loading after a minimum time
