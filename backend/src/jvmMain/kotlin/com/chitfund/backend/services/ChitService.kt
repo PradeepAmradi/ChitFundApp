@@ -58,7 +58,7 @@ class ChitService {
             transaction {
                 val chits = Chits.select { 
                     (Chits.moderatorId eq UUID.fromString(userId)) or 
-                    (Chits.id inSubQuery ChitMembers.select { ChitMembers.userId eq UUID.fromString(userId) }.map { it[ChitMembers.chitId] })
+                    (Chits.id inList ChitMembers.select { ChitMembers.userId eq UUID.fromString(userId) }.map { it[ChitMembers.chitId] })
                 }.map { row ->
                     Chit(
                         id = row[Chits.id].toString(),
@@ -141,18 +141,19 @@ class ChitService {
                 }
                 
                 // Find user by email or mobile
-                val identifier = request.email ?: request.mobile ?: return@transaction Result.Error("Email or mobile required")
-                val user = if (request.email != null) {
-                    Users.select { Users.email eq request.email }.firstOrNull()
+                val email = request.email
+                val mobile = request.mobile
+                val identifier = email ?: mobile ?: return@transaction Result.Error("Email or mobile required")
+                val user = if (email != null) {
+                    Users.select { Users.email eq email }.firstOrNull()
                 } else {
-                    Users.select { Users.mobile eq request.mobile!! }.firstOrNull()
+                    Users.select { Users.mobile eq mobile!! }.firstOrNull()
                 } ?: return@transaction Result.Error("User not found")
                 
-                val userId = user[Users.id]
-                
                 // Check if user already invited/joined
+                val userUuid = user[Users.id].value
                 val existingMember = ChitMembers.select { 
-                    (ChitMembers.chitId eq UUID.fromString(chitId)) and (ChitMembers.userId eq userId)
+                    (ChitMembers.chitId eq UUID.fromString(chitId)) and (ChitMembers.userId eq userUuid)
                 }.firstOrNull()
                 
                 if (existingMember != null) {
@@ -161,9 +162,9 @@ class ChitService {
                 
                 // Add member with INVITED status
                 ChitMembers.insert {
-                    it[this.chitId] = UUID.fromString(chitId)
-                    it[this.userId] = userId
-                    it[status] = MemberStatusDb.INVITED
+                    it[ChitMembers.chitId] = UUID.fromString(chitId)
+                    it[ChitMembers.userId] = userUuid
+                    it[ChitMembers.status] = MemberStatusDb.INVITED
                 }
                 
                 Result.Success("Invitation sent successfully")

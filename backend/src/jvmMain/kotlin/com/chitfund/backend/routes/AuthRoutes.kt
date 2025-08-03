@@ -18,7 +18,7 @@ fun Route.authRoutes() {
             
             when (val result = authService.initiateLogin(request)) {
                 is Result.Success -> {
-                    call.respond(HttpStatusCode.OK, ApiResponse(success = true, message = result.data))
+                    call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = result.data))
                 }
                 is Result.Error -> {
                     call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))

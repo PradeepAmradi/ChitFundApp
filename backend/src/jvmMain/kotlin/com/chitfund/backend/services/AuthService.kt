@@ -59,10 +59,13 @@ class AuthService {
             otpStore.remove(key)
             
             transaction {
-                val user = if (request.email != null) {
-                    findOrCreateUserByEmail(request.email)
-                } else if (request.mobile != null) {
-                    findOrCreateUserByMobile(request.mobile)
+                val email = request.email
+                val mobile = request.mobile
+                
+                val user = if (email != null) {
+                    findOrCreateUserByEmail(email)
+                } else if (mobile != null) {
+                    findOrCreateUserByMobile(mobile)
                 } else {
                     return@transaction Result.Error("Email or mobile required")
                 }
