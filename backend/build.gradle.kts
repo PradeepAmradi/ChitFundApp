@@ -45,7 +45,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
+    mainClass.set("com.chitfund.backend.ApplicationKt")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
 }
 
