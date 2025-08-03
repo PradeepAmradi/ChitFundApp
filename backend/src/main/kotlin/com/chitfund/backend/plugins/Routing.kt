@@ -3,11 +3,19 @@ package com.chitfund.backend.plugins
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.http.content.*
+import io.ktor.http.*
 import com.chitfund.backend.routes.*
+import java.io.File
 
 fun Application.configureRouting() {
     routing {
-        get("/") {
+        // Serve static web content
+        staticFiles("/", File("web")) {
+            default("index.html")
+        }
+        
+        get("/api") {
             call.respondText("Chit Fund Backend API - Version 1.0")
         }
         
