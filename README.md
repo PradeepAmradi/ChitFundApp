@@ -23,7 +23,7 @@ The deployment pipeline runs automatically when:
 - **Azure Container Registry**: `chitfundacr.azurecr.io`
 - **Azure Database**: PostgreSQL managed instance
 - **Azure Web App**: `chitfund-webapp` (Container-based)
-- **Resource Group**: `chitfund-rg` (East US)
+- **Resource Group**: `chitfund-rg` (Central India)
 
 ## 🏗️ Project Structure
 
