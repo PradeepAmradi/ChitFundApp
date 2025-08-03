@@ -2,6 +2,29 @@
 
 A scalable, full-stack **Chit Fund Management App** built with Kotlin Multiplatform to digitize the traditional chit system for both **moderators** and **members**.
 
+## 🚀 Continuous Deployment Status
+
+[![Azure Backend Deployment](https://github.com/PradeepAmradi/ChitFundApp/actions/workflows/azure-deploy.yml/badge.svg)](https://github.com/PradeepAmradi/ChitFundApp/actions/workflows/azure-deploy.yml)
+
+### Deployment Pipeline
+- **🔄 Automated CI/CD**: GitHub Actions workflow triggered on push to `main` branch
+- **🧪 Testing**: Automated test execution before deployment
+- **🐳 Containerization**: Docker image build and push to Azure Container Registry
+- **☁️ Azure Deployment**: Automatic deployment to Azure Web App for Containers
+- **🌐 Live Environment**: [https://chitfund-webapp.azurewebsites.net](https://chitfund-webapp.azurewebsites.net)
+
+### Deployment Triggers
+The deployment pipeline runs automatically when:
+- Code is pushed to the `main` branch
+- Changes are made to `backend/`, `shared/`, `Dockerfile`, or workflow files
+- Manual trigger via GitHub Actions UI (`workflow_dispatch`)
+
+### Infrastructure
+- **Azure Container Registry**: `chitfundacr.azurecr.io`
+- **Azure Database**: PostgreSQL managed instance
+- **Azure Web App**: `chitfund-webapp` (Container-based)
+- **Resource Group**: `chitfund-rg` (East US)
+
 ## 🏗️ Project Structure
 
 ```
@@ -208,6 +231,24 @@ az login
 - **Azure Database for PostgreSQL** for data storage  
 - **Azure Web App for Containers** for hosting
 - **GitHub Actions** for automated CI/CD
+
+### Monitoring Deployments
+- **GitHub Actions**: Monitor build and deployment status at [Actions tab](https://github.com/PradeepAmradi/ChitFundApp/actions)
+- **Azure Portal**: View application logs and metrics in the Azure portal
+- **Application Health**: Automatic health checks are performed after deployment
+- **Deployment Logs**: Detailed logs available in both GitHub Actions and Azure Web App logs
+
+### Troubleshooting
+```bash
+# Check deployment status
+az webapp show --name chitfund-webapp --resource-group chitfund-rg --query "state"
+
+# View application logs
+az webapp log tail --name chitfund-webapp --resource-group chitfund-rg
+
+# Restart the application
+az webapp restart --name chitfund-webapp --resource-group chitfund-rg
+```
 
 See [`AZURE_DEPLOYMENT.md`](AZURE_DEPLOYMENT.md) for detailed setup instructions.
 
