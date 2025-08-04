@@ -103,6 +103,70 @@ const MOCK_DATA = {
                     joinedAt: "2024-01-02T00:00:00Z",
                     status: "APPROVED",
                     payments: []
+                },
+                {
+                    userId: "user-125",
+                    userName: "Jane Smith",
+                    email: "jane.smith@example.com",
+                    joinedAt: "2024-01-03T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-126",
+                    userName: "Raj Patel",
+                    email: "raj.patel@example.com",
+                    joinedAt: "2024-01-04T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-127",
+                    userName: "Priya Sharma",
+                    email: "priya.sharma@example.com",
+                    joinedAt: "2024-01-05T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-128",
+                    userName: "Amit Kumar",
+                    email: "amit.kumar@example.com",
+                    joinedAt: "2024-01-06T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-129",
+                    userName: "Sunita Reddy",
+                    email: "sunita.reddy@example.com",
+                    joinedAt: "2024-01-07T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-130",
+                    userName: "Vikram Singh",
+                    email: "vikram.singh@example.com",
+                    joinedAt: "2024-01-08T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-131",
+                    userName: "Meera Joshi",
+                    email: "meera.joshi@example.com",
+                    joinedAt: "2024-01-09T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-132",
+                    userName: "Arjun Nair",
+                    email: "arjun.nair@example.com",
+                    joinedAt: "2024-01-10T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
                 }
             ],
             createdAt: "2024-01-01T00:00:00Z"
