@@ -79,7 +79,7 @@ const MOCK_DATA = {
         {
             id: "chit-1",
             name: "Family Savings Chit",
-            fundAmount: 10000000, // ₹1L in paisa
+            fundAmount: 100000000000, // ₹1L in paisa (corrected)
             tenure: 12,
             memberCount: 10,
             startMonth: "2024-01",
@@ -110,7 +110,7 @@ const MOCK_DATA = {
         {
             id: "chit-2",
             name: "Business Expansion Fund",
-            fundAmount: 50000000, // ₹5L in paisa
+            fundAmount: 500000000000, // ₹5L in paisa (corrected)
             tenure: 24,
             memberCount: 20,
             startMonth: "2024-02",
