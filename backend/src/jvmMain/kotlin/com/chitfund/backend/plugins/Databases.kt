@@ -4,6 +4,7 @@ import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import com.chitfund.backend.db.*
+import com.chitfund.backend.services.MockDataService
 
 fun Application.configureDatabases() {
     try {
@@ -19,6 +20,16 @@ fun Application.configureDatabases() {
         }
         
         log.info("Database connection established and schema created successfully")
+        
+        // Initialize mock data
+        try {
+            val mockDataService = MockDataService()
+            mockDataService.initializeMockData()
+            log.info("Mock data initialization completed")
+        } catch (e: Exception) {
+            log.warn("Failed to initialize mock data: ${e.message}")
+        }
+        
     } catch (e: Exception) {
         log.error("Failed to connect to database", e)
         // Don't fail the application startup - allow it to run without database for basic health checks
