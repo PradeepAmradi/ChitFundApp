@@ -2,22 +2,44 @@
 
 A scalable, full-stack **Chit Fund Management App** built with Kotlin Multiplatform to digitize the traditional chit system for both **moderators** and **members**.
 
-## 🚀 Continuous Deployment Status
+## 🚀 Continuous Integration & Deployment Status
 
+[![CI Build](https://github.com/PradeepAmradi/ChitFundApp/actions/workflows/android-ci.yml/badge.svg)](https://github.com/PradeepAmradi/ChitFundApp/actions/workflows/android-ci.yml)
 [![Azure Backend Deployment](https://github.com/PradeepAmradi/ChitFundApp/actions/workflows/azure-deploy.yml/badge.svg)](https://github.com/PradeepAmradi/ChitFundApp/actions/workflows/azure-deploy.yml)
 
-### Deployment Pipeline
-- **🔄 Automated CI/CD**: GitHub Actions workflow triggered on push to `main` branch
-- **🧪 Testing**: Automated test execution before deployment
-- **🐳 Containerization**: Docker image build and push to Azure Container Registry
-- **☁️ Azure Deployment**: Automatic deployment to Azure Web App for Containers
-- **🌐 Live Environment**: [https://chitfund-webapp.azurewebsites.net](https://chitfund-webapp.azurewebsites.net)
+### Build & Deployment Pipeline
+- **� CI Build**: Automated testing and building for all components (Backend, Android, Shared modules)
+- **🏗️ Backend Build**: Kotlin backend compilation, testing, and fat JAR generation
+- **� Android Release Build**: APK generation for both debug and release variants
+- **🐳 Azure Deployment**: Containerized backend deployment to Azure Web App
+- **🧪 Automated Testing**: Unit tests execution across all modules
 
-### Deployment Triggers
-The deployment pipeline runs automatically when:
+### CI Build Workflow
+The CI pipeline runs on:
+- Push to `main` and `develop` branches
+- Pull requests to `main` branch
+- Builds and tests all project components:
+  - **Shared Module**: Kotlin Multiplatform business logic
+  - **Backend**: Ktor server with fat JAR generation
+  - **Android App**: Debug and release APK builds
+  - **Artifacts**: Automatic upload of JARs and APKs
+
+### Workflow Triggers
+**CI Build Workflow** runs when:
+- Code is pushed to `main` or `develop` branches
+- Pull requests are opened against `main` branch
+- Builds all components: Backend, Android, and Shared modules
+
+**Azure Deployment Workflow** runs when:
 - Code is pushed to the `main` branch
 - Changes are made to `backend/`, `shared/`, `Dockerfile`, or workflow files
 - Manual trigger via GitHub Actions UI (`workflow_dispatch`)
+- Deploys containerized backend to Azure after successful CI build
+
+### Live Environment
+- **🌐 Production Backend**: [https://chitfund-webapp.azurewebsites.net](https://chitfund-webapp.azurewebsites.net)
+- **📱 Android APKs**: Available as artifacts from successful CI builds
+- **🔍 Build Artifacts**: JARs and APKs automatically uploaded and retained
 
 ### Infrastructure
 - **Azure Container Registry**: `chitfundacr.azurecr.io`
@@ -150,12 +172,47 @@ python3 server.py
 - **Dashboard**: Overview of chits and statistics  
 - **Chit Management**: Create, view, and manage chit funds
 - **Member Management**: Invite and manage chit members
+- **API Documentation**: Interactive Swagger-like API testing interface (`/api-docs.html`)
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Mock Data Mode**: Runs standalone for demo purposes
 
 ### Testing the API
 
-The backend provides a complete REST API. Here are some example requests:
+The backend provides a complete REST API with an interactive Swagger-like testing interface.
+
+#### 🧪 Interactive API Testing (Swagger-like Interface)
+
+For easy API testing and exploration, use the built-in API documentation interface:
+
+```bash
+# 1. Start the backend server
+./gradlew :backend:run
+
+# 2. Start the web server (in a new terminal)
+cd web
+python3 server.py
+
+# 3. Open the API testing interface
+# Navigate to: http://localhost:3000/api-docs.html
+```
+
+**Features of the API Testing Interface:**
+- 📋 **Complete API Documentation**: All endpoints with descriptions and examples
+- 🔐 **Authentication Testing**: Login and OTP verification with token management
+- 🧪 **Interactive Forms**: Test any endpoint directly from the browser
+- 📊 **Response Viewer**: Formatted JSON responses with syntax highlighting
+- 🔄 **Token Management**: Automatic token handling for authenticated requests
+- 📱 **Responsive Design**: Works on desktop, tablet, and mobile devices
+
+**API Testing Workflow:**
+1. **Authentication**: Use the login endpoint to get an OTP (check backend logs)
+2. **Token Generation**: Verify OTP to receive authentication token
+3. **API Testing**: Use the token to test protected endpoints
+4. **Data Management**: Create chits, manage users, and test all functionality
+
+#### 🔧 Manual API Testing with cURL
+
+You can also test the API manually using cURL commands:
 
 ```bash
 # Test basic connectivity
