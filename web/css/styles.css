@@ -175,6 +175,19 @@ body {
     cursor: not-allowed;
 }
 
+/* Prevent button shrinking during loading states */
+.btn:has(.btn-loading) {
+    min-width: 130px;
+}
+
+/* Fallback for browsers that don't support :has() */
+.btn.btn-primary,
+.btn.btn-secondary,
+.btn.btn-success,
+.btn.btn-danger {
+    min-width: 130px;
+}
+
 .btn-loading {
     position: absolute;
     top: 50%;
