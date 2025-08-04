@@ -192,6 +192,21 @@ class App {
                 case 'settings':
                     await this.loadSettings();
                     break;
+                case 'chit-details':
+                    if (this.currentChitId) {
+                        const chitDetails = await chitManager.getChitDetails(this.currentChitId);
+                        await this.loadChitDetailsPage(chitDetails);
+                    } else {
+                        await this.loadDashboard();
+                    }
+                    break;
+                case 'invite-members':
+                    if (this.currentChitId) {
+                        await this.loadInviteMembersPage(this.currentChitId);
+                    } else {
+                        await this.loadDashboard();
+                    }
+                    break;
                 default:
                     contentArea.innerHTML = '<h2>Page not found</h2>';
             }
@@ -589,9 +604,21 @@ class App {
     }
 
     async viewChitDetails(chitId) {
-        // For now, just show an alert. In a full implementation, 
-        // this would navigate to a detailed view
-        alert(`Viewing details for chit ID: ${chitId}`);
+        try {
+            // Load chit details
+            const chitDetails = await chitManager.getChitDetails(chitId);
+            this.currentPage = 'chit-details';
+            this.currentChitId = chitId;
+            
+            // Load chit details page
+            await this.loadChitDetailsPage(chitDetails);
+            
+            // Update browser history
+            history.pushState({ page: 'chit-details', chitId }, '', `/chit/${chitId}`);
+        } catch (error) {
+            console.error('Error loading chit details:', error);
+            Utils.showError(`Failed to load chit details: ${error.message}`);
+        }
     }
 
     async handleMockDataToggle(useMockData) {
@@ -896,6 +923,306 @@ class App {
         // Reload current page
         await this.loadPageContent(this.currentPage);
         Utils.showSuccess('Switched to mock data mode');
+    }
+
+    async loadChitDetailsPage(chit) {
+        const contentArea = document.getElementById('content-area');
+        const currentUserId = "user-123"; // TODO: Get from auth token
+        const isModeratorAndOpen = chit.moderatorId === currentUserId && chit.status === 'OPEN';
+        
+        contentArea.innerHTML = `
+            <div class="chit-details">
+                <div class="data-mode-indicator ${API_CONFIG.useMockData ? 'mock' : 'live'}">
+                    <i class="fas ${API_CONFIG.useMockData ? 'fa-flask' : 'fa-server'}"></i>
+                    Using ${API_CONFIG.useMockData ? 'Mock' : 'Live'} Data
+                </div>
+                
+                <div class="page-header">
+                    <div>
+                        <h2><i class="fas fa-coins"></i> ${chit.name}</h2>
+                        <p class="breadcrumb">
+                            <button class="btn-link" onclick="app.navigateToPage('chits')">My Chits</button>
+                            <i class="fas fa-chevron-right"></i>
+                            <span>Chit Details</span>
+                        </p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="app.navigateToPage('chits')">
+                        <i class="fas fa-arrow-left"></i> Back to Chits
+                    </button>
+                </div>
+
+                <div class="chit-details-content">
+                    <div class="chit-overview-card">
+                        <div class="chit-header">
+                            <div class="chit-title">
+                                <h3>${chit.name}</h3>
+                                <span class="status-badge status-${chit.status.toLowerCase()}">${chit.status}</span>
+                            </div>
+                            ${isModeratorAndOpen ? `
+                                <button class="btn btn-success" onclick="app.navigateToInviteMembers('${chit.id}')">
+                                    <i class="fas fa-user-plus"></i> Invite Members
+                                </button>
+                            ` : ''}
+                        </div>
+                        
+                        ${chitManager.generateChitSummary(chit)}
+                        
+                        <div class="chit-progress">
+                            ${chitManager.generateChitProgressBar(
+                                chit.members ? chit.members.length : 0, 
+                                chit.memberCount
+                            )}
+                        </div>
+                    </div>
+
+                    <div class="chit-sections">
+                        <div class="chit-section">
+                            ${chitManager.generateMembersList(chit.members)}
+                        </div>
+                        
+                        <div class="chit-section">
+                            ${chitManager.generatePaymentHistory(chit.payments || [])}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async loadInviteMembersPage(chitId) {
+        const contentArea = document.getElementById('content-area');
+        
+        try {
+            // Get current chit details
+            const chit = await chitManager.getChitDetails(chitId);
+            
+            // Get contacts list (mock data for now)
+            const contacts = await this.getContactsList();
+            
+            contentArea.innerHTML = `
+                <div class="invite-members">
+                    <div class="data-mode-indicator ${API_CONFIG.useMockData ? 'mock' : 'live'}">
+                        <i class="fas ${API_CONFIG.useMockData ? 'fa-flask' : 'fa-server'}"></i>
+                        Using ${API_CONFIG.useMockData ? 'Mock' : 'Live'} Data
+                    </div>
+                    
+                    <div class="page-header">
+                        <div>
+                            <h2><i class="fas fa-user-plus"></i> Invite Members</h2>
+                            <p class="breadcrumb">
+                                <button class="btn-link" onclick="app.navigateToPage('chits')">My Chits</button>
+                                <i class="fas fa-chevron-right"></i>
+                                <button class="btn-link" onclick="app.viewChitDetails('${chitId}')">${chit.name}</button>
+                                <i class="fas fa-chevron-right"></i>
+                                <span>Invite Members</span>
+                            </p>
+                        </div>
+                        <button class="btn btn-secondary" onclick="app.viewChitDetails('${chitId}')">
+                            <i class="fas fa-arrow-left"></i> Back to Details
+                        </button>
+                    </div>
+
+                    <div class="invite-content">
+                        <div class="chit-info-card">
+                            <h3>${chit.name}</h3>
+                            <p>Select contacts to invite to this chit fund.</p>
+                            <div class="chit-quick-info">
+                                <span><strong>Fund Amount:</strong> ${Utils.formatIndianCurrency(chit.fundAmount)}</span>
+                                <span><strong>Current Members:</strong> ${chit.members ? chit.members.length : 0}/${chit.memberCount}</span>
+                                <span><strong>Available Slots:</strong> ${chit.memberCount - (chit.members ? chit.members.length : 0)}</span>
+                            </div>
+                        </div>
+
+                        <div class="contacts-section">
+                            <div class="section-header">
+                                <h4>Select Contacts to Invite</h4>
+                                <div class="contacts-actions">
+                                    <button class="btn btn-secondary" onclick="app.selectAllContacts()">
+                                        <i class="fas fa-check-square"></i> Select All
+                                    </button>
+                                    <button class="btn btn-secondary" onclick="app.clearAllContacts()">
+                                        <i class="fas fa-square"></i> Clear All
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="contacts-grid" id="contacts-grid">
+                                ${this.generateContactsGrid(contacts, chit.members)}
+                            </div>
+                            
+                            <div class="invite-actions">
+                                <div class="selected-count">
+                                    <span id="selected-count">0</span> contacts selected
+                                </div>
+                                <button class="btn btn-primary" id="send-invites-btn" onclick="app.sendInvitations('${chitId}')" disabled>
+                                    <i class="fas fa-envelope"></i> Send Invitations
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Initialize contact selection handlers
+            this.initializeContactSelection();
+        } catch (error) {
+            console.error('Error loading invite members page:', error);
+            contentArea.innerHTML = `
+                <div class="error-message">
+                    <p>Error loading invite page: ${error.message}</p>
+                    <button class="btn btn-primary" onclick="app.viewChitDetails('${chitId}')">
+                        <i class="fas fa-arrow-left"></i> Back to Details
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    navigateToInviteMembers(chitId) {
+        this.currentPage = 'invite-members';
+        this.currentChitId = chitId;
+        this.loadPageContent('invite-members');
+        history.pushState({ page: 'invite-members', chitId }, '', `/chit/${chitId}/invite`);
+    }
+
+    async getContactsList() {
+        // For now, return mock contacts. In a real app, this would fetch from the contacts API
+        return [
+            { id: 'contact-1', name: 'Alice Johnson', email: 'alice@example.com', phone: '+91 9876543210' },
+            { id: 'contact-2', name: 'Bob Smith', email: 'bob@example.com', phone: '+91 9876543211' },
+            { id: 'contact-3', name: 'Carol Davis', email: 'carol@example.com', phone: '+91 9876543212' },
+            { id: 'contact-4', name: 'David Wilson', email: 'david@example.com', phone: '+91 9876543213' },
+            { id: 'contact-5', name: 'Eve Brown', email: 'eve@example.com', phone: '+91 9876543214' },
+            { id: 'contact-6', name: 'Frank Miller', email: 'frank@example.com', phone: '+91 9876543215' },
+            { id: 'contact-7', name: 'Grace Lee', email: 'grace@example.com', phone: '+91 9876543216' },
+            { id: 'contact-8', name: 'Henry Garcia', email: 'henry@example.com', phone: '+91 9876543217' }
+        ];
+    }
+
+    generateContactsGrid(contacts, existingMembers) {
+        const existingEmails = new Set((existingMembers || []).map(member => member.email || ''));
+        
+        return contacts.map(contact => {
+            const isAlreadyMember = existingEmails.has(contact.email);
+            
+            return `
+                <div class="contact-item ${isAlreadyMember ? 'already-member' : ''}" data-contact-id="${contact.id}">
+                    <div class="contact-checkbox">
+                        <input type="checkbox" id="contact-${contact.id}" 
+                               ${isAlreadyMember ? 'disabled' : ''} 
+                               onchange="app.updateSelectedCount()">
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-details">
+                            <span class="contact-email">${contact.email}</span>
+                            <span class="contact-phone">${contact.phone}</span>
+                        </div>
+                        ${isAlreadyMember ? '<span class="member-badge">Already Member</span>' : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    initializeContactSelection() {
+        this.updateSelectedCount();
+    }
+
+    selectAllContacts() {
+        const checkboxes = document.querySelectorAll('#contacts-grid input[type="checkbox"]:not([disabled])');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+        });
+        this.updateSelectedCount();
+    }
+
+    clearAllContacts() {
+        const checkboxes = document.querySelectorAll('#contacts-grid input[type="checkbox"]:not([disabled])');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+        });
+        this.updateSelectedCount();
+    }
+
+    updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('#contacts-grid input[type="checkbox"]:checked');
+        const count = checkboxes.length;
+        const countElement = document.getElementById('selected-count');
+        const sendButton = document.getElementById('send-invites-btn');
+        
+        if (countElement) {
+            countElement.textContent = count;
+        }
+        
+        if (sendButton) {
+            sendButton.disabled = count === 0;
+        }
+    }
+
+    async sendInvitations(chitId) {
+        const selectedContacts = [];
+        const checkboxes = document.querySelectorAll('#contacts-grid input[type="checkbox"]:checked');
+        
+        checkboxes.forEach(checkbox => {
+            const contactId = checkbox.id.replace('contact-', '');
+            const contactItem = document.querySelector(`[data-contact-id="${contactId}"]`);
+            const name = contactItem.querySelector('.contact-name').textContent;
+            const email = contactItem.querySelector('.contact-email').textContent;
+            selectedContacts.push({ id: contactId, name, email });
+        });
+
+        if (selectedContacts.length === 0) {
+            Utils.showError('Please select at least one contact to invite');
+            return;
+        }
+
+        try {
+            // Show loading
+            const sendButton = document.getElementById('send-invites-btn');
+            const originalText = sendButton.innerHTML;
+            sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending Invitations...';
+            sendButton.disabled = true;
+
+            // Send invitations
+            let successCount = 0;
+            const results = [];
+
+            for (const contact of selectedContacts) {
+                try {
+                    const result = await chitManager.inviteMember(chitId, contact.email);
+                    results.push({ contact, success: true, message: result.message });
+                    successCount++;
+                } catch (error) {
+                    results.push({ contact, success: false, message: error.message });
+                }
+            }
+
+            // Show results
+            if (successCount === selectedContacts.length) {
+                Utils.showSuccess(`Successfully sent ${successCount} invitation(s)!`);
+                // Navigate back to chit details after a delay
+                setTimeout(() => {
+                    this.viewChitDetails(chitId);
+                }, 2000);
+            } else {
+                const failedCount = selectedContacts.length - successCount;
+                Utils.showError(`Sent ${successCount} invitation(s). ${failedCount} failed.`);
+            }
+
+            // Reset button
+            sendButton.innerHTML = originalText;
+            sendButton.disabled = false;
+
+        } catch (error) {
+            console.error('Error sending invitations:', error);
+            Utils.showError(`Failed to send invitations: ${error.message}`);
+            
+            // Reset button
+            const sendButton = document.getElementById('send-invites-btn');
+            sendButton.innerHTML = '<i class="fas fa-envelope"></i> Send Invitations';
+            sendButton.disabled = false;
+        }
     }
 
     logout() {

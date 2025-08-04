@@ -91,6 +91,7 @@ const MOCK_DATA = {
                 {
                     userId: "user-123",
                     userName: "Demo User",
+                    email: "demo@chitfund.com",
                     joinedAt: "2024-01-01T00:00:00Z",
                     status: "APPROVED",
                     payments: []
@@ -98,6 +99,7 @@ const MOCK_DATA = {
                 {
                     userId: "user-124",
                     userName: "John Doe",
+                    email: "john.doe@example.com",
                     joinedAt: "2024-01-02T00:00:00Z",
                     status: "APPROVED",
                     payments: []
@@ -263,7 +265,7 @@ class ApiClient {
             };
         }
         
-        if (endpoint.startsWith('/chits/') && !endpoint.includes('/') && method === 'GET') {
+        if (endpoint.startsWith('/chits/') && method === 'GET' && !endpoint.includes('/invite') && !endpoint.includes('/join')) {
             const chitId = endpoint.split('/')[2];
             const chit = MOCK_DATA.chits.find(c => c.id === chitId);
             if (chit) {

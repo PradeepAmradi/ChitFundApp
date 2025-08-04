@@ -108,6 +108,7 @@ class ChitManager {
                         <div class="member-card">
                             <div class="member-info">
                                 <h5>${member.userName}</h5>
+                                <span class="member-email">${member.email || 'No email'}</span>
                                 <span class="status-badge status-${member.status.toLowerCase()}">
                                     ${member.status}
                                 </span>
