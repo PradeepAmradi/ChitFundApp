@@ -304,6 +304,107 @@ const MOCK_DATA = {
                 }
             ],
             createdAt: "2023-10-01T00:00:00Z"
+        },
+        {
+            id: "chit-4",
+            name: "Housing Loan Fund",
+            fundAmount: 75000000000, // ₹7,50,000 in paisa
+            tenure: 18,
+            memberCount: 15,
+            startMonth: "2025-03",
+            endMonth: "2026-08",
+            payoutMethod: "VOTING",
+            moderatorId: "user-200", // Different moderator - current user is just a member
+            status: "ACTIVE",
+            members: [
+                {
+                    userId: "user-123", // Current user as a member
+                    userName: "Demo User",
+                    email: "demo@chitfund.com",
+                    joinedAt: "2025-03-01T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-200",
+                    userName: "Moderator Jane",
+                    email: "jane.moderator@example.com",
+                    joinedAt: "2025-03-01T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-201",
+                    userName: "Kumar Raj",
+                    email: "kumar.raj@example.com",
+                    joinedAt: "2025-03-02T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                }
+            ],
+            createdAt: "2025-03-01T00:00:00Z"
+        },
+        {
+            id: "chit-5",
+            name: "Wedding Celebration Fund",
+            fundAmount: 25000000000, // ₹2,50,000 in paisa
+            tenure: 12,
+            memberCount: 10,
+            startMonth: "2025-06",
+            endMonth: "2026-05",
+            payoutMethod: "RANDOM",
+            moderatorId: "user-300", // Different moderator - current user is just a member
+            status: "OPEN",
+            members: [
+                {
+                    userId: "user-123", // Current user as a member
+                    userName: "Demo User",
+                    email: "demo@chitfund.com",
+                    joinedAt: "2025-06-01T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-300",
+                    userName: "Moderator Alex",
+                    email: "alex.moderator@example.com",
+                    joinedAt: "2025-06-01T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                }
+            ],
+            createdAt: "2025-06-01T00:00:00Z"
+        },
+        {
+            id: "chit-6",
+            name: "Education Fund",
+            fundAmount: 15000000000, // ₹1,50,000 in paisa
+            tenure: 24,
+            memberCount: 12,
+            startMonth: "2024-01",
+            endMonth: "2025-12",
+            payoutMethod: "VOTING",
+            moderatorId: "user-400", // Different moderator - current user is just a member
+            status: "CLOSED",
+            members: [
+                {
+                    userId: "user-123", // Current user as a member
+                    userName: "Demo User",
+                    email: "demo@chitfund.com",
+                    joinedAt: "2024-01-01T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-400",
+                    userName: "Moderator Priya",
+                    email: "priya.moderator@example.com",
+                    joinedAt: "2024-01-01T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                }
+            ],
+            createdAt: "2024-01-01T00:00:00Z"
         }
     ]
 };
