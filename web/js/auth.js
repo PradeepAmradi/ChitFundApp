@@ -47,7 +47,7 @@ class AuthManager {
 
         // Show loading state
         const submitButton = form.querySelector('button[type="submit"]');
-        Utils.setLoading(submitButton.id || 'loginForm', true);
+        Utils.setLoading('send-otp-btn', true);
         Utils.hideMessages();
 
         try {
@@ -63,7 +63,7 @@ class AuthManager {
             console.error('Login error:', error);
             Utils.showError(`Network error: ${error.message}`);
         } finally {
-            Utils.setLoading(submitButton.id || 'loginForm', false);
+            Utils.setLoading('send-otp-btn', false);
         }
     }
 
@@ -81,7 +81,7 @@ class AuthManager {
 
         // Show loading state
         const submitButton = form.querySelector('button[type="submit"]');
-        Utils.setLoading(submitButton.id || 'otpForm', true);
+        Utils.setLoading('verify-otp-btn', true);
         Utils.hideMessages();
 
         try {
@@ -107,7 +107,7 @@ class AuthManager {
             console.error('OTP verification error:', error);
             Utils.showError(`Network error: ${error.message}`);
         } finally {
-            Utils.setLoading(submitButton.id || 'otpForm', false);
+            Utils.setLoading('verify-otp-btn', false);
         }
     }
 
