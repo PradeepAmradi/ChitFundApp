@@ -13,6 +13,11 @@ fun Application.configureHTTP() {
         allowHeader(HttpHeaders.Authorization)
         allowHeader(HttpHeaders.ContentType)
         allowCredentials = true
-        anyHost() // @TODO: Don't use this in production if possible. Try to limit it.
+        
+        // ✅ SECURE: Specify allowed origins instead of anyHost()
+        allowHost("localhost:3000") // Development frontend
+        allowHost("chitfund-webapp.azurewebsites.net", schemes = listOf("https")) // Production
+        allowHost("app.chitfund.com", schemes = listOf("https")) // Production domain if used
+        allowHost("chitfund-app.com", schemes = listOf("https")) // Production domain if used
     }
 }
