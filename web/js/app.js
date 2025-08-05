@@ -566,10 +566,37 @@ class App {
         return true;
     }
 
+    // Helper function to determine user's role in a chit
+    getUserRoleInChit(chit) {
+        const currentUserId = this.currentUser?.id || "user-123";
+        
+        if (chit.moderatorId === currentUserId) {
+            return 'moderator';
+        }
+        
+        // Check if user is a member
+        const isMember = chit.members && chit.members.some(member => member.userId === currentUserId);
+        if (isMember) {
+            return 'member';
+        }
+        
+        return 'none'; // User has no role in this chit
+    }
+
     createChitCard(chit) {
+        const userRole = this.getUserRoleInChit(chit);
+        const roleClass = `chit-card-${userRole}`;
+        const roleInfo = this.getRoleDisplayInfo(userRole);
+        
         return `
-            <div class="chit-card">
-                <h4>${chit.name}</h4>
+            <div class="chit-card ${roleClass}">
+                <div class="chit-header">
+                    <h4>${chit.name}</h4>
+                    <div class="role-badge ${roleInfo.badgeClass}">
+                        <i class="${roleInfo.icon}"></i>
+                        <span>${roleInfo.label}</span>
+                    </div>
+                </div>
                 <div class="chit-info">
                     <label>Amount:</label>
                     <span>${Utils.formatIndianCurrency(chit.fundAmount)}</span>
@@ -594,13 +621,41 @@ class App {
                     <label>End:</label>
                     <span>${Utils.formatMonth(chit.endMonth)}</span>
                 </div>
-                <div style="margin-top: 20px;">
+                <div class="chit-actions">
                     <button class="btn btn-primary" onclick="app.viewChitDetails('${chit.id}')">
                         <i class="fas fa-eye"></i> View Details
                     </button>
+                    ${userRole === 'moderator' && chit.status === 'OPEN' ? `
+                        <button class="btn btn-success btn-sm" onclick="app.navigateToInviteMembers('${chit.id}')">
+                            <i class="fas fa-user-plus"></i> Invite
+                        </button>
+                    ` : ''}
                 </div>
             </div>
         `;
+    }
+
+    getRoleDisplayInfo(role) {
+        switch (role) {
+            case 'moderator':
+                return {
+                    label: 'Moderator',
+                    icon: 'fas fa-crown',
+                    badgeClass: 'role-moderator'
+                };
+            case 'member':
+                return {
+                    label: 'Member',
+                    icon: 'fas fa-user',
+                    badgeClass: 'role-member'
+                };
+            default:
+                return {
+                    label: 'Observer',
+                    icon: 'fas fa-eye',
+                    badgeClass: 'role-observer'
+                };
+        }
     }
 
     async viewChitDetails(chitId) {
@@ -927,8 +982,10 @@ class App {
 
     async loadChitDetailsPage(chit) {
         const contentArea = document.getElementById('content-area');
-        const currentUserId = "user-123"; // TODO: Get from auth token
-        const isModeratorAndOpen = chit.moderatorId === currentUserId && chit.status === 'OPEN';
+        const currentUserId = this.currentUser?.id || "user-123";
+        const userRole = this.getUserRoleInChit(chit);
+        const roleInfo = this.getRoleDisplayInfo(userRole);
+        const isModeratorAndOpen = userRole === 'moderator' && chit.status === 'OPEN';
         
         contentArea.innerHTML = `
             <div class="chit-details">
@@ -946,13 +1003,19 @@ class App {
                             <span>Chit Details</span>
                         </p>
                     </div>
-                    <button class="btn btn-secondary" onclick="app.navigateToPage('chits')">
-                        <i class="fas fa-arrow-left"></i> Back to Chits
-                    </button>
+                    <div class="page-actions">
+                        <div class="role-badge ${roleInfo.badgeClass}" style="margin-right: 15px;">
+                            <i class="${roleInfo.icon}"></i>
+                            <span>Your Role: ${roleInfo.label}</span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="app.navigateToPage('chits')">
+                            <i class="fas fa-arrow-left"></i> Back to Chits
+                        </button>
+                    </div>
                 </div>
 
                 <div class="chit-details-content">
-                    <div class="chit-overview-card">
+                    <div class="chit-overview-card chit-card-${userRole}">
                         <div class="chit-header">
                             <div class="chit-title">
                                 <h3>${chit.name}</h3>
@@ -962,7 +1025,19 @@ class App {
                                 <button class="btn btn-success" onclick="app.navigateToInviteMembers('${chit.id}')">
                                     <i class="fas fa-user-plus"></i> Invite Members
                                 </button>
-                            ` : ''}
+                            ` : userRole === 'moderator' ? `
+                                <div class="moderator-actions">
+                                    <span class="moderator-label">
+                                        <i class="fas fa-crown"></i> Moderator Controls
+                                    </span>
+                                </div>
+                            ` : `
+                                <div class="member-info">
+                                    <span class="member-label">
+                                        <i class="fas fa-user"></i> Member View
+                                    </span>
+                                </div>
+                            `}
                         </div>
                         
                         ${chitManager.generateChitSummary(chit)}
