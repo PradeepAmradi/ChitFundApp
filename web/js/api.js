@@ -78,12 +78,12 @@ const MOCK_DATA = {
     chits: [
         {
             id: "chit-1",
-            name: "Family Savings Chit",
-            fundAmount: 10000000, // ₹1L in paisa
+            name: "Family Savings Fund",
+            fundAmount: 12000000000, // ₹1,20,000 in paisa (user requested amount)
             tenure: 12,
             memberCount: 10,
-            startMonth: "2024-01",
-            endMonth: "2024-12",
+            startMonth: "2025-02",
+            endMonth: "2026-01",
             payoutMethod: "RANDOM",
             moderatorId: "user-123",
             status: "ACTIVE",
@@ -92,7 +92,7 @@ const MOCK_DATA = {
                     userId: "user-123",
                     userName: "Demo User",
                     email: "demo@chitfund.com",
-                    joinedAt: "2024-01-01T00:00:00Z",
+                    joinedAt: "2025-02-01T00:00:00Z",
                     status: "APPROVED",
                     payments: []
                 },
@@ -100,26 +100,210 @@ const MOCK_DATA = {
                     userId: "user-124",
                     userName: "John Doe",
                     email: "john.doe@example.com",
-                    joinedAt: "2024-01-02T00:00:00Z",
+                    joinedAt: "2025-02-02T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-125",
+                    userName: "Jane Smith",
+                    email: "jane.smith@example.com",
+                    joinedAt: "2025-02-03T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-126",
+                    userName: "Raj Patel",
+                    email: "raj.patel@example.com",
+                    joinedAt: "2025-02-04T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-127",
+                    userName: "Priya Sharma",
+                    email: "priya.sharma@example.com",
+                    joinedAt: "2025-02-05T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-128",
+                    userName: "Amit Kumar",
+                    email: "amit.kumar@example.com",
+                    joinedAt: "2025-02-06T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-129",
+                    userName: "Sunita Reddy",
+                    email: "sunita.reddy@example.com",
+                    joinedAt: "2025-02-07T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-130",
+                    userName: "Vikram Singh",
+                    email: "vikram.singh@example.com",
+                    joinedAt: "2025-02-08T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-131",
+                    userName: "Meera Joshi",
+                    email: "meera.joshi@example.com",
+                    joinedAt: "2025-02-09T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-132",
+                    userName: "Arjun Nair",
+                    email: "arjun.nair@example.com",
+                    joinedAt: "2025-02-10T00:00:00Z",
                     status: "APPROVED",
                     payments: []
                 }
             ],
-            createdAt: "2024-01-01T00:00:00Z"
+            createdAt: "2025-02-01T00:00:00Z"
         },
         {
             id: "chit-2",
             name: "Business Expansion Fund",
-            fundAmount: 50000000, // ₹5L in paisa
-            tenure: 24,
+            fundAmount: 50000000000, // ₹5,00,000 in paisa (user requested amount)
+            tenure: 20,
             memberCount: 20,
-            startMonth: "2024-02",
-            endMonth: "2026-01",
+            startMonth: "2025-09",
+            endMonth: "2027-04",
             payoutMethod: "VOTING",
             moderatorId: "user-123",
             status: "OPEN",
-            members: [],
-            createdAt: "2024-01-15T00:00:00Z"
+            members: [
+                {
+                    userId: "user-133",
+                    userName: "Sarah Wilson",
+                    email: "sarah.wilson@example.com",
+                    joinedAt: "2025-09-01T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-134",
+                    userName: "David Kumar",
+                    email: "david.kumar@example.com",
+                    joinedAt: "2025-09-02T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-135",
+                    userName: "Lisa Patel",
+                    email: "lisa.patel@example.com",
+                    joinedAt: "2025-09-03T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                }
+            ],
+            createdAt: "2025-09-01T00:00:00Z"
+        },
+        {
+            id: "chit-3",
+            name: "Vacation Planning Fund",
+            fundAmount: 30000000000, // ₹3,00,000 in paisa (user requested amount)
+            tenure: 15,
+            memberCount: 10,
+            startMonth: "2023-10",
+            endMonth: "2024-12",
+            payoutMethod: "RANDOM",
+            moderatorId: "user-123",
+            status: "CLOSED",
+            members: [
+                {
+                    userId: "user-136",
+                    userName: "Alex Rodriguez",
+                    email: "alex.rodriguez@example.com",
+                    joinedAt: "2023-10-01T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-137",
+                    userName: "Maria Singh",
+                    email: "maria.singh@example.com",
+                    joinedAt: "2023-10-02T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-138",
+                    userName: "James Chen",
+                    email: "james.chen@example.com",
+                    joinedAt: "2023-10-03T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-139",
+                    userName: "Emily Davis",
+                    email: "emily.davis@example.com",
+                    joinedAt: "2023-10-04T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-140",
+                    userName: "Michael Brown",
+                    email: "michael.brown@example.com",
+                    joinedAt: "2023-10-05T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-141",
+                    userName: "Anna Johnson",
+                    email: "anna.johnson@example.com",
+                    joinedAt: "2023-10-06T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-142",
+                    userName: "Robert Lee",
+                    email: "robert.lee@example.com",
+                    joinedAt: "2023-10-07T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-143",
+                    userName: "Sophie Taylor",
+                    email: "sophie.taylor@example.com",
+                    joinedAt: "2023-10-08T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-144",
+                    userName: "Thomas Anderson",
+                    email: "thomas.anderson@example.com",
+                    joinedAt: "2023-10-09T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                },
+                {
+                    userId: "user-145",
+                    userName: "Grace Wilson",
+                    email: "grace.wilson@example.com",
+                    joinedAt: "2023-10-10T00:00:00Z",
+                    status: "APPROVED",
+                    payments: []
+                }
+            ],
+            createdAt: "2023-10-01T00:00:00Z"
         }
     ]
 };
