@@ -730,6 +730,11 @@ class App {
     }
 
     async testBackendConnection() {
+        // If using mock data, always return success (no real connection needed)
+        if (API_CONFIG.useMockData) {
+            return Promise.resolve();
+        }
+        
         try {
             // Try a simple endpoint to test connection
             const response = await fetch(`${ConfigManager.getConfig().baseURL}/health`, {
