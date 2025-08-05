@@ -176,16 +176,13 @@ body {
 }
 
 /* Prevent button shrinking during loading states */
-.btn:has(.btn-loading) {
-    min-width: 130px;
-}
-
-/* Fallback for browsers that don't support :has() */
-.btn.btn-primary,
-.btn.btn-secondary,
-.btn.btn-success,
-.btn.btn-danger {
-    min-width: 130px;
+.btn {
+    min-height: 48px; /* Set consistent minimum height */
+    min-width: 130px; /* Set consistent minimum width */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
 }
 
 .btn-loading {
@@ -193,6 +190,24 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    color: inherit;
+}
+
+/* Ensure button text and loading states maintain layout */
+.btn .btn-text,
+.btn .btn-loading {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn .btn-text.hidden {
+    visibility: hidden; /* Use visibility instead of display to maintain space */
+    opacity: 0;
+}
+
+.btn .btn-loading.hidden {
+    display: none;
 }
 
 /* Header styles */
