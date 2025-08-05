@@ -111,8 +111,8 @@ class MockDataService {
         val chitId = UUID.randomUUID()
         val memberCount = 20 // Target member count
         val tenure = 20 // months
-        val fundAmount = 300000000000L // ₹3L in paisa (3 × 100,000,000,000)
-        val monthlyContribution = fundAmount / (memberCount * tenure) // ₹7500 per member per month
+        val fundAmount = 500000000000L // ₹5L in paisa (5 × 100,000,000,000)
+        val monthlyContribution = fundAmount / (memberCount * tenure) // ₹12,500 per member per month
         
         // Start month is next month (open for joining)
         val startMonth = "2025-09"
@@ -120,7 +120,7 @@ class MockDataService {
         
         Chits.insert {
             it[id] = chitId
-            it[name] = "Home Purchase Chit - Open for Joining"
+            it[name] = "Business Expansion Fund"
             it[Chits.fundAmount] = fundAmount
             it[Chits.tenure] = tenure
             it[Chits.memberCount] = memberCount
@@ -132,12 +132,12 @@ class MockDataService {
             it[createdAt] = LocalDateTime.now()
         }
         
-        // Add some members (not full capacity - only 15 out of 20)
-        memberIds.take(15).forEach { memberId ->
+        // Add only 3 members out of 20 (as requested)
+        memberIds.take(3).forEach { memberId ->
             ChitMembers.insert {
                 it[ChitMembers.chitId] = chitId
                 it[ChitMembers.userId] = memberId
-                it[ChitMembers.status] = if (memberIds.indexOf(memberId) < 12) MemberStatusDb.JOINED else MemberStatusDb.INVITED
+                it[ChitMembers.status] = MemberStatusDb.JOINED
                 it[ChitMembers.joinedAt] = LocalDateTime.now().minusDays((memberIds.indexOf(memberId) + 1).toLong())
             }
         }
@@ -147,19 +147,19 @@ class MockDataService {
     
     private fun createActiveChit(moderatorId: UUID, memberIds: List<UUID>) {
         val chitId = UUID.randomUUID()
-        val memberCount = 20 // Full member count achieved
-        val tenure = 24 // months
-        val fundAmount = 200000000000L // ₹2L in paisa (2 × 100,000,000,000)
-        val monthlyContribution = fundAmount / (memberCount * tenure) // ₹4166.67 per member per month
+        val memberCount = 10 // Full member count achieved
+        val tenure = 12 // months
+        val fundAmount = 200000000000L // ₹2L in paisa (2 × 100,000,000,000) - adjusted from ₹1.2L to comply with validation rules
+        val monthlyContribution = fundAmount / (memberCount * tenure) // ₹16,666.67 per member per month
         
         // Started 6 months ago, currently in month 7
         val startMonth = "2025-02" 
-        val endMonth = "2027-01" // Calculate: 2025-02 + 24 months = 2027-01
+        val endMonth = "2026-01" // Calculate: 2025-02 + 12 months = 2026-01
         val currentActiveMonth = "2025-08" // Currently in 7th month
         
         Chits.insert {
             it[id] = chitId
-            it[name] = "Education Loan Chit - Active"
+            it[name] = "Family Savings Fund"
             it[Chits.fundAmount] = fundAmount
             it[Chits.tenure] = tenure
             it[Chits.memberCount] = memberCount
@@ -171,7 +171,7 @@ class MockDataService {
             it[createdAt] = LocalDateTime.now().minusMonths(7)
         }
         
-        // Add all required members (full capacity)
+        // Add all required members (full capacity - 10/10)
         memberIds.take(memberCount).forEach { memberId ->
             ChitMembers.insert {
                 it[ChitMembers.chitId] = chitId
@@ -190,7 +190,7 @@ class MockDataService {
                     it[id] = paymentId
                     it[Payments.chitId] = chitId
                     it[Payments.memberId] = memberId
-                    it[amount] = monthlyContribution // ₹4166.67 in paisa
+                    it[amount] = monthlyContribution // ₹16,666.67 in paisa
                     it[Payments.month] = month
                     it[status] = PaymentStatusDb.PAID
                     it[paidAt] = LocalDateTime.parse("${month}-15T10:00:00")
@@ -206,10 +206,10 @@ class MockDataService {
                 it[id] = paymentId
                 it[Payments.chitId] = chitId
                 it[Payments.memberId] = memberId
-                it[amount] = monthlyContribution // ₹4166.67 in paisa
+                it[amount] = monthlyContribution // ₹16,666.67 in paisa
                 it[Payments.month] = currentActiveMonth
-                it[status] = if (memberIds.indexOf(memberId) < 15) PaymentStatusDb.PAID else PaymentStatusDb.PENDING
-                it[paidAt] = if (memberIds.indexOf(memberId) < 15) LocalDateTime.now().minusDays(5) else null
+                it[status] = if (memberIds.indexOf(memberId) < 8) PaymentStatusDb.PAID else PaymentStatusDb.PENDING
+                it[paidAt] = if (memberIds.indexOf(memberId) < 8) LocalDateTime.now().minusDays(5) else null
                 it[createdAt] = LocalDateTime.parse("${currentActiveMonth}-01T09:00:00")
             }
         }
@@ -237,17 +237,17 @@ class MockDataService {
     private fun createClosedChit(moderatorId: UUID, memberIds: List<UUID>) {
         val chitId = UUID.randomUUID()
         val memberCount = 10
-        val tenure = 12 // months - completed
-        val fundAmount = 100000000000L // ₹1L in paisa (1 × 100,000,000,000)
-        val monthlyContribution = fundAmount / (memberCount * tenure) // ₹8333.33 per member per month
+        val tenure = 15 // months - completed
+        val fundAmount = 300000000000L // ₹3L in paisa (3 × 100,000,000,000)
+        val monthlyContribution = fundAmount / (memberCount * tenure) // ₹20,000 per member per month
         
         // Started and completed in 2024
-        val startMonth = "2024-01"
-        val endMonth = "2024-12" // Calculate: 2024-01 + 12 months = 2024-12
+        val startMonth = "2023-10"
+        val endMonth = "2024-12" // Calculate: 2023-10 + 15 months = 2024-12
         
         Chits.insert {
             it[id] = chitId
-            it[name] = "Small Business Chit - Completed"
+            it[name] = "Vacation Planning Fund"
             it[Chits.fundAmount] = fundAmount
             it[Chits.tenure] = tenure
             it[Chits.memberCount] = memberCount
@@ -256,7 +256,7 @@ class MockDataService {
             it[payoutMethod] = PayoutMethodDb.RANDOM
             it[Chits.moderatorId] = moderatorId
             it[status] = ChitStatusDb.CLOSED
-            it[createdAt] = LocalDateTime.now().minusMonths(15)
+            it[createdAt] = LocalDateTime.now().minusMonths(18)
         }
         
         // Add all members
@@ -265,12 +265,13 @@ class MockDataService {
                 it[ChitMembers.chitId] = chitId
                 it[ChitMembers.userId] = memberId
                 it[ChitMembers.status] = MemberStatusDb.APPROVED
-                it[ChitMembers.joinedAt] = LocalDateTime.now().minusMonths(15).plusDays(memberIds.indexOf(memberId).toLong())
+                it[ChitMembers.joinedAt] = LocalDateTime.now().minusMonths(18).plusDays(memberIds.indexOf(memberId).toLong())
             }
         }
         
-        // Add payment records for all 12 months (completed)
+        // Add payment records for all 15 months (completed)
         val allMonths = listOf(
+            "2023-10", "2023-11", "2023-12",
             "2024-01", "2024-02", "2024-03", "2024-04", "2024-05", "2024-06",
             "2024-07", "2024-08", "2024-09", "2024-10", "2024-11", "2024-12"
         )
@@ -282,7 +283,7 @@ class MockDataService {
                     it[id] = paymentId
                     it[Payments.chitId] = chitId
                     it[Payments.memberId] = memberId
-                    it[amount] = monthlyContribution // ₹8333.33 in paisa
+                    it[amount] = monthlyContribution // ₹20,000 in paisa
                     it[Payments.month] = month
                     it[status] = PaymentStatusDb.PAID
                     it[paidAt] = LocalDateTime.parse("${month}-15T10:00:00")
@@ -291,7 +292,7 @@ class MockDataService {
             }
         }
         
-        // Add payout records for all 12 months (completed)
+        // Add payout records for all 15 months (completed)
         allMonths.forEachIndexed { index, month ->
             val recipientId = memberIds[index % memberCount] // Cycle through members
             val payoutId = UUID.randomUUID()
