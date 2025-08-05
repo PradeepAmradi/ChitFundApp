@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+// import io.ktor.server.plugins.ratelimit.*
 import com.chitfund.shared.data.*
 import com.chitfund.shared.utils.Result
 import com.chitfund.backend.services.ChitService
@@ -12,6 +13,7 @@ import com.chitfund.backend.services.ChitService
 fun Route.chitRoutes() {
     val chitService = ChitService()
     
+    // TODO: Add rate limiting when plugin is available
     route("/chits") {
         get {
             // For now, return empty list - implement proper auth later
@@ -22,20 +24,6 @@ fun Route.chitRoutes() {
                 }
                 is Result.Error -> {
                     call.respond(HttpStatusCode.BadRequest, ApiResponse<List<Chit>>(success = false, message = result.message))
-                }
-            }
-        }
-        
-        post {
-            val request = call.receive<CreateChitRequest>()
-            val moderatorId = "user-123" // TODO: Get from auth token
-            
-            when (val result = chitService.createChit(request, moderatorId)) {
-                is Result.Success -> {
-                    call.respond(HttpStatusCode.Created, ApiResponse(success = true, data = result.data))
-                }
-                is Result.Error -> {
-                    call.respond(HttpStatusCode.BadRequest, ApiResponse<Chit>(success = false, message = result.message))
                 }
             }
         }
@@ -52,6 +40,21 @@ fun Route.chitRoutes() {
                 }
                 is Result.Error -> {
                     call.respond(HttpStatusCode.NotFound, ApiResponse<Chit>(success = false, message = result.message))
+                }
+            }
+        }
+        
+        // Sensitive operations
+        post {
+            val request = call.receive<CreateChitRequest>()
+            val moderatorId = "user-123" // TODO: Get from auth token
+            
+            when (val result = chitService.createChit(request, moderatorId)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.Created, ApiResponse(success = true, data = result.data))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<Chit>(success = false, message = result.message))
                 }
             }
         }

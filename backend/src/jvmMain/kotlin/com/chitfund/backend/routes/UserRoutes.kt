@@ -4,6 +4,7 @@ import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+// import io.ktor.server.plugins.ratelimit.*
 import com.chitfund.shared.data.*
 import com.chitfund.shared.utils.Result
 import com.chitfund.backend.services.UserService
@@ -11,6 +12,7 @@ import com.chitfund.backend.services.UserService
 fun Route.userRoutes() {
     val userService = UserService()
     
+    // TODO: Add rate limiting when plugin is available
     route("/users") {
         get("/profile") {
             val userId = "user-123" // TODO: Get from auth token
