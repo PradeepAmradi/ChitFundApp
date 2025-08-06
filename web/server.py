@@ -8,10 +8,12 @@ import http.server
 import socketserver
 import os
 import sys
+import json
+import time
 from pathlib import Path
 
 # Configuration
-PORT = 3000
+PORT = 8080  # Changed to match backend API port
 DIRECTORY = Path(__file__).parent
 
 class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -29,11 +31,40 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Handle preflight requests
         self.send_response(200)
         self.end_headers()
+    
+    def do_GET(self):
+        # Handle health endpoint
+        if self.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            health_data = {
+                "status": "healthy",
+                "service": "ChitFund Backend API",
+                "version": "1.0",
+                "timestamp": int(time.time() * 1000)
+            }
+            self.wfile.write(json.dumps(health_data).encode())
+            return
+        
+        # Handle API info endpoint  
+        if self.path == '/api':
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.end_headers()
+            self.wfile.write(b"Chit Fund Backend API - Version 1.0")
+            return
+            
+        # Default file serving
+        super().do_GET()
 
 def main():
-    print(f"Starting ChitFund Web Server on port {PORT}")
+    print(f"Starting ChitFund Backend Server on port {PORT}")
     print(f"Serving files from: {DIRECTORY}")
-    print(f"Open your browser to: http://localhost:{PORT}")
+    print(f"Backend API endpoints:")
+    print(f"  - GET http://localhost:{PORT}/health")
+    print(f"  - GET http://localhost:{PORT}/api") 
+    print(f"Open your browser to: http://localhost:3000 (if running web server separately)")
     print("Press Ctrl+C to stop the server")
     
     with socketserver.TCPServer(("", PORT), MyHTTPRequestHandler) as httpd:
