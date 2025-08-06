@@ -737,7 +737,7 @@ class App {
         
         try {
             // Try a simple endpoint to test connection
-            const response = await fetch(`${ConfigManager.getConfig().baseURL}/health`, {
+            const response = await fetch(`${ConfigManager.getConfig().baseURL.replace('/api/v1', '')}/health`, {
                 method: 'GET',
                 timeout: 5000
             });
