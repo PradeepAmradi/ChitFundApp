@@ -20,7 +20,25 @@ data class VerifyOtpRequest(
 data class AuthResponse(
     val success: Boolean,
     val token: String? = null,
+    val refreshToken: String? = null,
     val user: User? = null,
+    val message: String? = null,
+    val accessTokenExpiresAt: Long? = null,
+    val refreshTokenExpiresAt: Long? = null
+)
+
+@Serializable
+data class RefreshTokenRequest(
+    val refreshToken: String
+)
+
+@Serializable
+data class RefreshTokenResponse(
+    val success: Boolean,
+    val accessToken: String? = null,
+    val refreshToken: String? = null,
+    val accessTokenExpiresAt: Long? = null,
+    val refreshTokenExpiresAt: Long? = null,
     val message: String? = null
 )
 

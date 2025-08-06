@@ -35,6 +35,8 @@ kotlin {
                 implementation(libs.exposed.jdbc)
                 implementation(libs.exposed.java.time)
                 implementation(libs.postgresql)
+                implementation(libs.hikaricp)
+                implementation(libs.h2.database)
                 implementation(libs.logback)
             }
         }

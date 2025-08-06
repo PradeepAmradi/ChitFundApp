@@ -44,6 +44,46 @@ fun Route.authRoutes() {
                     }
                 }
             }
+            
+            // Token operations use standard API rate limiting
+            rateLimit(RateLimitName("api")) {
+                post("/refresh") {
+                    val request = call.receive<RefreshTokenRequest>()
+                    
+                    when (val result = authService.refreshToken(request.refreshToken)) {
+                        is Result.Success -> {
+                            val tokenPair = result.data
+                            call.respond(HttpStatusCode.OK, RefreshTokenResponse(
+                                success = true,
+                                accessToken = tokenPair.accessToken,
+                                refreshToken = tokenPair.refreshToken,
+                                accessTokenExpiresAt = tokenPair.accessTokenExpiresAt,
+                                refreshTokenExpiresAt = tokenPair.refreshTokenExpiresAt,
+                                message = "Token refreshed successfully"
+                            ))
+                        }
+                        is Result.Error -> {
+                            call.respond(HttpStatusCode.BadRequest, RefreshTokenResponse(
+                                success = false,
+                                message = result.message
+                            ))
+                        }
+                    }
+                }
+                
+                post("/logout") {
+                    val request = call.receive<RefreshTokenRequest>()
+                    
+                    when (val result = authService.revokeRefreshToken(request.refreshToken)) {
+                        is Result.Success -> {
+                            call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = result.data))
+                        }
+                        is Result.Error -> {
+                            call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
+                        }
+                    }
+                }
+            }
         }
     }
 }
