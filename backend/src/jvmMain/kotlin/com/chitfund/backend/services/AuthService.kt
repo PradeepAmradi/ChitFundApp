@@ -1,5 +1,7 @@
 package com.chitfund.backend.services
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.chitfund.shared.data.*
 import com.chitfund.shared.utils.Result
 import com.chitfund.backend.db.*
@@ -10,6 +12,17 @@ import java.time.LocalDateTime
 import kotlin.random.Random
 
 class AuthService {
+    
+    companion object {
+        private const val ACCESS_TOKEN_EXPIRY = 15 * 60 * 1000L // 15 minutes
+        private const val REFRESH_TOKEN_EXPIRY = 7 * 24 * 60 * 60 * 1000L // 7 days
+        private const val JWT_ISSUER = "chitfund-app"
+        private const val JWT_AUDIENCE = "chitfund-users"
+        
+        // In production, this should come from environment variable
+        private val JWT_SECRET = System.getenv("JWT_SECRET") ?: "chitfund-default-secret-key-please-change-in-production"
+        private val algorithm = Algorithm.HMAC256(JWT_SECRET)
+    }
     
     private val otpStore = mutableMapOf<String, OtpData>()
     
@@ -70,13 +83,14 @@ class AuthService {
                     return@transaction Result.Error("Email or mobile required")
                 }
                 
-                // Generate JWT token (simplified - in production use proper JWT library)
-                val token = generateJwtToken(user.id)
+                // Generate JWT tokens
+                val tokens = generateTokens(user.id)
                 
                 Result.Success(
                     AuthResponse(
                         success = true,
-                        token = token,
+                        token = tokens.accessToken,
+                        refreshToken = tokens.refreshToken,
                         user = user
                     )
                 )
@@ -90,9 +104,58 @@ class AuthService {
         return Random.nextInt(100000, 999999).toString()
     }
     
-    private fun generateJwtToken(userId: String): String {
-        // Simplified token generation - in production, use proper JWT library like jose4j
-        return "chitfund_token_${userId}_${System.currentTimeMillis()}"
+    fun generateTokens(userId: String): TokenPair {
+        val now = System.currentTimeMillis()
+        
+        val accessToken = JWT.create()
+            .withSubject(userId)
+            .withIssuer(JWT_ISSUER)
+            .withAudience(JWT_AUDIENCE)
+            .withIssuedAt(Date(now))
+            .withExpiresAt(Date(now + ACCESS_TOKEN_EXPIRY))
+            .withClaim("type", "access")
+            .sign(algorithm)
+            
+        val refreshToken = JWT.create()
+            .withSubject(userId)
+            .withIssuer(JWT_ISSUER)
+            .withAudience(JWT_AUDIENCE)
+            .withIssuedAt(Date(now))
+            .withExpiresAt(Date(now + REFRESH_TOKEN_EXPIRY))
+            .withClaim("type", "refresh")
+            .sign(algorithm)
+            
+        return TokenPair(accessToken, refreshToken)
+    }
+    
+    fun verifyToken(token: String): String? {
+        return try {
+            val decodedJWT = JWT.require(algorithm)
+                .withIssuer(JWT_ISSUER)
+                .withAudience(JWT_AUDIENCE)
+                .build()
+                .verify(token)
+            decodedJWT.subject
+        } catch (e: Exception) {
+            null
+        }
+    }
+    
+    fun refreshAccessToken(refreshToken: String): Result<TokenPair> {
+        return try {
+            val decodedJWT = JWT.require(algorithm)
+                .withIssuer(JWT_ISSUER)
+                .withAudience(JWT_AUDIENCE)
+                .withClaim("type", "refresh")
+                .build()
+                .verify(refreshToken)
+                
+            val userId = decodedJWT.subject
+            val tokens = generateTokens(userId)
+            Result.Success(tokens)
+        } catch (e: Exception) {
+            Result.Error("Invalid refresh token")
+        }
     }
     
     private fun findOrCreateUserByEmail(email: String): User {
@@ -167,3 +230,8 @@ class AuthService {
         }
     }
 }
+
+data class TokenPair(
+    val accessToken: String,
+    val refreshToken: String
+)

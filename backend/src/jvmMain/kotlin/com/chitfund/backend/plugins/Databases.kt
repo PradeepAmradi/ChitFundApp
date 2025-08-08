@@ -5,15 +5,46 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import com.chitfund.backend.db.*
 import com.chitfund.backend.services.MockDataService
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 
 fun Application.configureDatabases() {
     try {
-        val driverClassName = "org.postgresql.Driver"
-        val jdbcURL = System.getenv("DATABASE_URL") ?: "jdbc:postgresql://localhost:5432/chitfund"
+        val databaseUrl = System.getenv("DATABASE_URL") ?: "jdbc:postgresql://localhost:5432/chitfund"
+        val databaseUser = System.getenv("DATABASE_USER") ?: "chitfund"
+        val databasePassword = System.getenv("DATABASE_PASSWORD") ?: "password"
+        val maxPoolSize = System.getenv("DATABASE_POOL_SIZE")?.toIntOrNull() ?: 10
         
-        log.info("Attempting to connect to database: ${jdbcURL.replace(Regex("://[^@]+@"), "://***:***@")}")
+        log.info("Attempting to connect to database: ${databaseUrl.replace(Regex("://[^@]+@"), "://***:***@")}")
         
-        val database = Database.connect(jdbcURL, driverClassName)
+        // Configure HikariCP for secure database connections
+        val config = HikariConfig().apply {
+            jdbcUrl = databaseUrl
+            username = databaseUser
+            password = databasePassword
+            driverClassName = "org.postgresql.Driver"
+            
+            // Security settings
+            isAutoCommit = false
+            transactionIsolation = "TRANSACTION_READ_COMMITTED"
+            maximumPoolSize = maxPoolSize
+            minimumIdle = 2
+            connectionTimeout = 30000
+            idleTimeout = 600000
+            maxLifetime = 1800000
+            
+            // SSL settings for production
+            if (System.getenv("DATABASE_SSL_MODE") != null) {
+                addDataSourceProperty("sslmode", System.getenv("DATABASE_SSL_MODE"))
+            }
+            
+            // Connection validation
+            connectionTestQuery = "SELECT 1"
+            validationTimeout = 5000
+        }
+        
+        val dataSource = HikariDataSource(config)
+        val database = Database.connect(dataSource)
         
         transaction(database) {
             SchemaUtils.create(Users, Chits, ChitMembers, Payments, Payouts)

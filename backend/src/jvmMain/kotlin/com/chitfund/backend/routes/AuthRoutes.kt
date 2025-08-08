@@ -5,6 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+// import io.ktor.server.plugins.ratelimit.*
 import com.chitfund.shared.data.*
 import com.chitfund.shared.utils.Result
 import com.chitfund.backend.services.AuthService
@@ -12,6 +13,7 @@ import com.chitfund.backend.services.AuthService
 fun Route.authRoutes() {
     val authService = AuthService()
     
+    // TODO: Add rate limiting when plugin is available
     route("/auth") {
         post("/login") {
             val request = call.receive<LoginRequest>()
@@ -35,6 +37,19 @@ fun Route.authRoutes() {
                 }
                 is Result.Error -> {
                     call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
+                }
+            }
+        }
+        
+        post("/refresh") {
+            val request = call.receive<RefreshTokenRequest>()
+            
+            when (val result = authService.refreshAccessToken(request.refreshToken)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse(success = true, data = result.data))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.Unauthorized, ApiResponse<String>(success = false, message = result.message))
                 }
             }
         }
