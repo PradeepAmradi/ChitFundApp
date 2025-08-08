@@ -6,27 +6,35 @@ import io.ktor.server.plugins.defaultheaders.*
 
 fun Application.configureSecurity() {
     install(DefaultHeaders) {
-        // Security headers
+        // Security headers for production readiness
         header("X-Content-Type-Options", "nosniff")
         header("X-Frame-Options", "DENY")
         header("X-XSS-Protection", "1; mode=block")
         header("Referrer-Policy", "strict-origin-when-cross-origin")
         header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
         
-        // Content Security Policy
+        // Enhanced Content Security Policy with Google Fonts support
         header("Content-Security-Policy", 
             "default-src 'self'; " +
             "script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; " +
-            "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; " +
+            "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com; " +
             "img-src 'self' data: https:; " +
             "connect-src 'self' localhost:8080 chitfund-webapp.azurewebsites.net; " +
-            "font-src 'self' cdnjs.cloudflare.com"
+            "font-src 'self' cdnjs.cloudflare.com fonts.gstatic.com; " +
+            "object-src 'none'; " +
+            "base-uri 'self'"
         )
         
         // HSTS for HTTPS - Enable when SSL is configured
         val sslEnabled = System.getenv("SSL_ENABLED")?.toBoolean() ?: false
         if (sslEnabled) {
-            header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+            header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
         }
+        
+        // Additional security headers for comprehensive protection
+        header("X-Permitted-Cross-Domain-Policies", "none")
+        header("Cross-Origin-Embedder-Policy", "require-corp")
+        header("Cross-Origin-Opener-Policy", "same-origin")
+        header("Cross-Origin-Resource-Policy", "same-site")
     }
 }

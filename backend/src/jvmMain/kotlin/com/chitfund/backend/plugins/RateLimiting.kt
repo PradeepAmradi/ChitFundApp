@@ -97,15 +97,15 @@ class RateLimitingPlugin(private val config: Configuration) {
 
 fun Application.configureRateLimit() {
     install(RateLimitingPlugin) {
-        // Aggressive rate limiting as requested - 100 requests per user per day
+        // Aggressive daily rate limiting as requested - 100 requests per user per day
         globalLimit = System.getenv("RATE_LIMIT_GLOBAL")?.toIntOrNull() ?: 100
-        globalWindowMinutes = 24 * 60 // 24 hours
+        globalWindowMinutes = 24 * 60 // 24 hours for daily limit
         
-        // Auth endpoints - very strict
+        // Auth endpoints - very strict to prevent abuse
         authLimit = System.getenv("RATE_LIMIT_AUTH")?.toIntOrNull() ?: 5
         authWindowMinutes = 60 // 1 hour
         
-        // API endpoints - moderate
+        // API endpoints - moderate limits
         apiLimit = System.getenv("RATE_LIMIT_API")?.toIntOrNull() ?: 50
         apiWindowMinutes = 60 // 1 hour
         

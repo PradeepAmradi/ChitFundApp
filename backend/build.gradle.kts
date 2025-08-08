@@ -36,6 +36,7 @@ kotlin {
                 implementation(libs.postgresql)
                 implementation(libs.hikari)
                 implementation(libs.java.jwt)
+                implementation(libs.h2.database)
                 implementation(libs.logback)
             }
         }

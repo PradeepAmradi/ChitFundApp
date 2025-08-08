@@ -3,28 +3,44 @@ package com.chitfund.backend.plugins
 import io.ktor.server.application.*
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import com.chitfund.backend.db.*
-import com.chitfund.backend.services.MockDataService
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import com.chitfund.backend.db.*
+import com.chitfund.backend.services.MockDataService
 
 fun Application.configureDatabases() {
     try {
-        val databaseUrl = System.getenv("DATABASE_URL") ?: "jdbc:postgresql://localhost:5432/chitfund"
-        val databaseUser = System.getenv("DATABASE_USER") ?: "chitfund"
-        val databasePassword = System.getenv("DATABASE_PASSWORD") ?: "password"
-        val maxPoolSize = System.getenv("DATABASE_POOL_SIZE")?.toIntOrNull() ?: 10
+        // Enhanced configuration supporting both environment variables and application.conf
+        val databaseUrl = System.getenv("DATABASE_URL") 
+            ?: environment.config.propertyOrNull("database.url")?.getString() 
+            ?: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1"
+        val databaseUser = System.getenv("DATABASE_USER") 
+            ?: environment.config.propertyOrNull("database.user")?.getString() 
+            ?: "sa"
+        val databasePassword = System.getenv("DATABASE_PASSWORD") 
+            ?: environment.config.propertyOrNull("database.password")?.getString() 
+            ?: ""
+        val maxPoolSize = System.getenv("DATABASE_POOL_SIZE")?.toIntOrNull() 
+            ?: environment.config.propertyOrNull("database.maxPoolSize")?.getString()?.toIntOrNull() 
+            ?: 10
         
         log.info("Attempting to connect to database: ${databaseUrl.replace(Regex("://[^@]+@"), "://***:***@")}")
         
-        // Configure HikariCP for secure database connections
+        // Configure HikariCP for production-grade connection pooling
         val config = HikariConfig().apply {
             jdbcUrl = databaseUrl
             username = databaseUser
             password = databasePassword
-            driverClassName = "org.postgresql.Driver"
             
-            // Security settings
+            // Auto-detect driver based on URL
+            driverClassName = when {
+                databaseUrl.contains("postgresql") -> "org.postgresql.Driver"
+                databaseUrl.contains("h2") -> "org.h2.Driver"
+                else -> environment.config.propertyOrNull("database.driver")?.getString() 
+                    ?: "org.h2.Driver"
+            }
+            
+            // Security and performance settings
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_READ_COMMITTED"
             maximumPoolSize = maxPoolSize
@@ -51,14 +67,17 @@ fun Application.configureDatabases() {
         }
         
         log.info("Database connection established and schema created successfully")
+        log.info("Active connections: ${dataSource.hikariPoolMXBean.activeConnections}")
         
-        // Initialize mock data
-        try {
-            val mockDataService = MockDataService()
-            mockDataService.initializeMockData()
-            log.info("Mock data initialization completed")
-        } catch (e: Exception) {
-            log.warn("Failed to initialize mock data: ${e.message}")
+        // Initialize mock data only if it's development (H2 database)
+        if (databaseUrl.contains("h2")) {
+            try {
+                val mockDataService = MockDataService()
+                mockDataService.initializeMockData()
+                log.info("Mock data initialization completed")
+            } catch (e: Exception) {
+                log.warn("Failed to initialize mock data: ${e.message}")
+            }
         }
         
     } catch (e: Exception) {

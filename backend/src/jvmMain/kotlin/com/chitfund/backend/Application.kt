@@ -13,6 +13,9 @@ fun main() {
 fun Application.module() {
     configureSerialization()
     configureDatabases()
+    configureSecurity()
+    configureRateLimit()
+    configureValidation()
     configureHTTP()
     configureSecurity()
     configureRateLimit() // Custom rate limiting implementation
