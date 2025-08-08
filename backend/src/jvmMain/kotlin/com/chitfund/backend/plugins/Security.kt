@@ -13,7 +13,7 @@ fun Application.configureSecurity() {
         header("Referrer-Policy", "strict-origin-when-cross-origin")
         header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
         
-        // Content Security Policy - restrict resource loading
+        // Enhanced Content Security Policy with Google Fonts support
         header("Content-Security-Policy", 
             "default-src 'self'; " +
             "script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; " +
@@ -25,13 +25,13 @@ fun Application.configureSecurity() {
             "base-uri 'self'"
         )
         
-        // HSTS for HTTPS - check if HTTPS is enabled
-        val isHttpsEnabled = this@configureSecurity.environment.config.propertyOrNull("ktor.deployment.ssl")?.getString()?.toBoolean() ?: false
-        if (isHttpsEnabled) {
+        // HSTS for HTTPS - Enable when SSL is configured
+        val sslEnabled = System.getenv("SSL_ENABLED")?.toBoolean() ?: false
+        if (sslEnabled) {
             header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
         }
         
-        // Additional security headers
+        // Additional security headers for comprehensive protection
         header("X-Permitted-Cross-Domain-Policies", "none")
         header("Cross-Origin-Embedder-Policy", "require-corp")
         header("Cross-Origin-Opener-Policy", "same-origin")

@@ -17,6 +17,11 @@ data class VerifyOtpRequest(
 )
 
 @Serializable
+data class RefreshTokenRequest(
+    val refreshToken: String
+)
+
+@Serializable
 data class AuthResponse(
     val success: Boolean,
     val token: String? = null,

@@ -10,52 +10,53 @@ import com.chitfund.backend.services.MockDataService
 
 fun Application.configureDatabases() {
     try {
-        val config = HikariConfig()
-        
-        // Get configuration from application.conf with fallbacks
-        val databaseUrl = environment.config.propertyOrNull("database.url")?.getString() 
+        // Enhanced configuration supporting both environment variables and application.conf
+        val databaseUrl = System.getenv("DATABASE_URL") 
+            ?: environment.config.propertyOrNull("database.url")?.getString() 
             ?: "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1"
-        val databaseDriver = environment.config.propertyOrNull("database.driver")?.getString() 
-            ?: "org.h2.Driver"
-        val databaseUser = environment.config.propertyOrNull("database.user")?.getString() 
+        val databaseUser = System.getenv("DATABASE_USER") 
+            ?: environment.config.propertyOrNull("database.user")?.getString() 
             ?: "sa"
-        val databasePassword = environment.config.propertyOrNull("database.password")?.getString() 
+        val databasePassword = System.getenv("DATABASE_PASSWORD") 
+            ?: environment.config.propertyOrNull("database.password")?.getString() 
             ?: ""
-        val maxPoolSize = environment.config.propertyOrNull("database.maxPoolSize")?.getString()?.toIntOrNull() 
+        val maxPoolSize = System.getenv("DATABASE_POOL_SIZE")?.toIntOrNull() 
+            ?: environment.config.propertyOrNull("database.maxPoolSize")?.getString()?.toIntOrNull() 
             ?: 10
         
         log.info("Attempting to connect to database: ${databaseUrl.replace(Regex("://[^@]+@"), "://***:***@")}")
         
         // Configure HikariCP for production-grade connection pooling
-        config.apply {
+        val config = HikariConfig().apply {
             jdbcUrl = databaseUrl
-            driverClassName = databaseDriver
             username = databaseUser
             password = databasePassword
-            maximumPoolSize = maxPoolSize
             
-            // Security settings
+            // Auto-detect driver based on URL
+            driverClassName = when {
+                databaseUrl.contains("postgresql") -> "org.postgresql.Driver"
+                databaseUrl.contains("h2") -> "org.h2.Driver"
+                else -> environment.config.propertyOrNull("database.driver")?.getString() 
+                    ?: "org.h2.Driver"
+            }
+            
+            // Security and performance settings
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_READ_COMMITTED"
+            maximumPoolSize = maxPoolSize
+            minimumIdle = 2
+            connectionTimeout = 30000
+            idleTimeout = 600000
+            maxLifetime = 1800000
+            
+            // SSL settings for production
+            if (System.getenv("DATABASE_SSL_MODE") != null) {
+                addDataSourceProperty("sslmode", System.getenv("DATABASE_SSL_MODE"))
+            }
             
             // Connection validation
             connectionTestQuery = "SELECT 1"
-            validationTimeout = 3000
-            
-            // Performance settings
-            connectionTimeout = 30000 // 30 seconds
-            idleTimeout = 300000 // 5 minutes
-            maxLifetime = 900000 // 15 minutes
-            leakDetectionThreshold = 60000 // 1 minute
-            
-            // For PostgreSQL SSL (if using PostgreSQL in production)
-            if (jdbcUrl.contains("postgresql")) {
-                // Add SSL properties for PostgreSQL
-                addDataSourceProperty("sslMode", "prefer")
-                addDataSourceProperty("sslCert", System.getenv("DB_SSL_CERT") ?: "")
-                addDataSourceProperty("sslKey", System.getenv("DB_SSL_KEY") ?: "")
-                addDataSourceProperty("sslRootCert", System.getenv("DB_SSL_ROOT_CERT") ?: "")
-            }
+            validationTimeout = 5000
         }
         
         val dataSource = HikariDataSource(config)

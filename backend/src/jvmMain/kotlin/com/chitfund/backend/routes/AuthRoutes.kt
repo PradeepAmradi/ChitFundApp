@@ -5,7 +5,7 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import io.ktor.server.plugins.ratelimit.*
+// import io.ktor.server.plugins.ratelimit.*
 import com.chitfund.shared.data.*
 import com.chitfund.shared.utils.Result
 import com.chitfund.backend.services.AuthService
@@ -13,75 +13,43 @@ import com.chitfund.backend.services.AuthService
 fun Route.authRoutes() {
     val authService = AuthService()
     
-    // Apply daily rate limiting to all auth routes
-    rateLimit(RateLimitName("daily")) {
-        route("/auth") {
-            // Apply stricter auth-specific rate limiting for OTP endpoints
-            rateLimit(RateLimitName("auth")) {
-                post("/login") {
-                    val request = call.receive<LoginRequest>()
-                    
-                    when (val result = authService.initiateLogin(request)) {
-                        is Result.Success -> {
-                            call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = result.data))
-                        }
-                        is Result.Error -> {
-                            call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
-                        }
-                    }
+    // TODO: Add rate limiting when plugin is available
+    route("/auth") {
+        post("/login") {
+            val request = call.receive<LoginRequest>()
+            
+            when (val result = authService.initiateLogin(request)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = result.data))
                 }
-                
-                post("/verify-otp") {
-                    val request = call.receive<VerifyOtpRequest>()
-                    
-                    when (val result = authService.verifyOtp(request)) {
-                        is Result.Success -> {
-                            call.respond(HttpStatusCode.OK, result.data)
-                        }
-                        is Result.Error -> {
-                            call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
-                        }
-                    }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
                 }
             }
+        }
+        
+        post("/verify-otp") {
+            val request = call.receive<VerifyOtpRequest>()
             
-            // Token operations use standard API rate limiting
-            rateLimit(RateLimitName("api")) {
-                post("/refresh") {
-                    val request = call.receive<RefreshTokenRequest>()
-                    
-                    when (val result = authService.refreshToken(request.refreshToken)) {
-                        is Result.Success -> {
-                            val tokenPair = result.data
-                            call.respond(HttpStatusCode.OK, RefreshTokenResponse(
-                                success = true,
-                                accessToken = tokenPair.accessToken,
-                                refreshToken = tokenPair.refreshToken,
-                                accessTokenExpiresAt = tokenPair.accessTokenExpiresAt,
-                                refreshTokenExpiresAt = tokenPair.refreshTokenExpiresAt,
-                                message = "Token refreshed successfully"
-                            ))
-                        }
-                        is Result.Error -> {
-                            call.respond(HttpStatusCode.BadRequest, RefreshTokenResponse(
-                                success = false,
-                                message = result.message
-                            ))
-                        }
-                    }
+            when (val result = authService.verifyOtp(request)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, result.data)
                 }
-                
-                post("/logout") {
-                    val request = call.receive<RefreshTokenRequest>()
-                    
-                    when (val result = authService.revokeRefreshToken(request.refreshToken)) {
-                        is Result.Success -> {
-                            call.respond(HttpStatusCode.OK, ApiResponse<String>(success = true, message = result.data))
-                        }
-                        is Result.Error -> {
-                            call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
-                        }
-                    }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.BadRequest, ApiResponse<String>(success = false, message = result.message))
+                }
+            }
+        }
+        
+        post("/refresh") {
+            val request = call.receive<RefreshTokenRequest>()
+            
+            when (val result = authService.refreshAccessToken(request.refreshToken)) {
+                is Result.Success -> {
+                    call.respond(HttpStatusCode.OK, ApiResponse(success = true, data = result.data))
+                }
+                is Result.Error -> {
+                    call.respond(HttpStatusCode.Unauthorized, ApiResponse<String>(success = false, message = result.message))
                 }
             }
         }

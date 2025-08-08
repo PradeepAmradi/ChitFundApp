@@ -17,5 +17,8 @@ fun Application.module() {
     configureRateLimit()
     configureValidation()
     configureHTTP()
+    configureSecurity()
+    configureRateLimit() // Custom rate limiting implementation
+    configureValidation()
     configureRouting()
 }
