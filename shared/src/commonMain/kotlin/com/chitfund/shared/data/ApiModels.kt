@@ -33,11 +33,6 @@ data class AuthResponse(
 )
 
 @Serializable
-data class RefreshTokenRequest(
-    val refreshToken: String
-)
-
-@Serializable
 data class RefreshTokenResponse(
     val success: Boolean,
     val accessToken: String? = null,
