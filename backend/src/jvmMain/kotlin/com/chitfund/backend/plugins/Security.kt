@@ -19,7 +19,7 @@ fun Application.configureSecurity() {
             "script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; " +
             "style-src 'self' 'unsafe-inline' cdnjs.cloudflare.com fonts.googleapis.com; " +
             "img-src 'self' data: https:; " +
-            "connect-src 'self' chitfund-webapp.azurewebsites.net; " +
+            "connect-src 'self' localhost:8080 chitfund-webapp.azurewebsites.net; " +
             "font-src 'self' cdnjs.cloudflare.com fonts.gstatic.com; " +
             "object-src 'none'; " +
             "base-uri 'self'"
