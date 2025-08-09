@@ -32,6 +32,25 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
     
+    def do_POST(self):
+        # Handle API v1 POST endpoints - redirect to mock data mode
+        if self.path.startswith('/api/v1/'):
+            self.send_response(503)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            error_data = {
+                "success": False,
+                "message": "Backend API server is not running. Please start the Ktor backend or use mock data mode.",
+                "error": "SERVICE_UNAVAILABLE",
+                "suggestion": "Switch to Mock Data mode or start the backend with: ./gradlew :backend:run"
+            }
+            self.wfile.write(json.dumps(error_data).encode())
+            return
+        
+        # Default handling for other POST requests
+        self.send_response(404)
+        self.end_headers()
+    
     def do_GET(self):
         # Handle health endpoint
         if self.path == '/health':
@@ -53,6 +72,20 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
             self.wfile.write(b"Chit Fund Backend API - Version 1.0")
+            return
+        
+        # Handle API v1 endpoints - redirect to mock data mode
+        if self.path.startswith('/api/v1/'):
+            self.send_response(503)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            error_data = {
+                "success": False,
+                "message": "Backend API server is not running. Please start the Ktor backend or use mock data mode.",
+                "error": "SERVICE_UNAVAILABLE",
+                "suggestion": "Switch to Mock Data mode or start the backend with: ./gradlew :backend:run"
+            }
+            self.wfile.write(json.dumps(error_data).encode())
             return
             
         # Default file serving

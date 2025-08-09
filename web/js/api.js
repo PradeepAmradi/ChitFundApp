@@ -472,6 +472,9 @@ class ApiClient {
             } else if (error.name === 'TypeError') {
                 // Network error (e.g., server not running)
                 throw new Error('Cannot connect to server - Please check if the backend is running or switch to mock data mode');
+            } else if (error.message && error.message.includes('SERVICE_UNAVAILABLE')) {
+                // Handle our custom service unavailable error from Python server
+                throw new Error('Backend service is unavailable - Please start the Ktor backend server or switch to mock data mode');
             }
             throw error;
         }
