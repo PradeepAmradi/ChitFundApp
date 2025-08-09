@@ -67,10 +67,16 @@ class RateLimitingPlugin(private val config: Configuration) {
                 val path = call.request.path()
                 val method = call.request.httpMethod.value
                 
+                // Skip rate limiting for health checks and basic info endpoints
+                if (path == "/health" || path == "/api" || path.startsWith("/static")) {
+                    proceed()
+                    return@intercept
+                }
+                
                 val (limit, window) = when {
-                    path.startsWith("/auth") -> configuration.authLimit to configuration.authWindowMinutes
-                    path.startsWith("/chits") && method == "POST" -> configuration.sensitiveLimit to configuration.sensitiveWindowMinutes
-                    path.startsWith("/api") -> configuration.apiLimit to configuration.apiWindowMinutes
+                    path.startsWith("/api/v1/auth") -> configuration.authLimit to configuration.authWindowMinutes
+                    path.startsWith("/api/v1/chits") && method == "POST" -> configuration.sensitiveLimit to configuration.sensitiveWindowMinutes
+                    path.startsWith("/api/v1") -> configuration.apiLimit to configuration.apiWindowMinutes
                     else -> configuration.globalLimit to configuration.globalWindowMinutes
                 }
                 
@@ -84,7 +90,7 @@ class RateLimitingPlugin(private val config: Configuration) {
                             "message" to "Too many requests. Please try again later."
                         )
                     )
-                    return@intercept finish()
+                    return@intercept
                 }
                 
                 proceed()

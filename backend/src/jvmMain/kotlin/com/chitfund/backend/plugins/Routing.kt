@@ -10,11 +10,7 @@ import java.io.File
 
 fun Application.configureRouting() {
     routing {
-        // Serve static web content
-        staticFiles("/", File("web")) {
-            default("index.html")
-        }
-        
+        // Basic API endpoints 
         get("/api") {
             call.respondText("Chit Fund Backend API - Version 1.0")
         }
@@ -34,5 +30,10 @@ fun Application.configureRouting() {
             chitRoutes()
             userRoutes()
         }
+        
+        // Serve static web content (disabled for now to avoid File path issues)
+        // staticFiles("/", File("web")) {
+        //     default("index.html")
+        // }
     }
 }

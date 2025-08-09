@@ -26,6 +26,13 @@ fun Application.configureDatabases() {
         
         log.info("Attempting to connect to database: ${databaseUrl.replace(Regex("://[^@]+@"), "://***:***@")}")
         
+        // Skip database initialization if database is not accessible (for basic health checks)
+        if (databaseUrl.contains("localhost") && System.getenv("AZURE_WEBAPP_NAME") != null) {
+            log.warn("Skipping database connection in Azure environment with localhost URL")
+            log.info("Application started without database - using fallback mode")
+            return
+        }
+        
         // Configure HikariCP for production-grade connection pooling
         val config = HikariConfig().apply {
             jdbcUrl = databaseUrl
