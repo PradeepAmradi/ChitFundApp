@@ -15,7 +15,7 @@ fun Application.module() {
     configureDatabases()
     configureHTTP()
     configureSecurity()
-    // configureRateLimit() // Temporarily disabled for deployment 
-    // configureValidation() // Temporarily disabled for deployment
+    configureRateLimit()
+    configureValidation()
     configureRouting()
 }

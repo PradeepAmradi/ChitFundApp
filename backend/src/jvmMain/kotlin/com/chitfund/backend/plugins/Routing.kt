@@ -31,9 +31,25 @@ fun Application.configureRouting() {
             userRoutes()
         }
         
-        // Serve static web content (disabled for now to avoid File path issues)
-        // staticFiles("/", File("web")) {
-        //     default("index.html")
-        // }
+        // Serve static web content with proper path resolution
+        try {
+            val webDir = File("web")
+            if (webDir.exists() && webDir.isDirectory) {
+                staticFiles("/", webDir) {
+                    default("index.html")
+                }
+            } else {
+                // Fallback: try relative path from project root  
+                val relativeWebDir = File("../web")
+                if (relativeWebDir.exists() && relativeWebDir.isDirectory) {
+                    staticFiles("/", relativeWebDir) {
+                        default("index.html")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // If static file serving fails, log but don't crash the application
+            application.log.warn("Failed to configure static file serving: ${e.message}")
+        }
     }
 }

@@ -61,39 +61,46 @@ class RateLimitingPlugin(private val config: Configuration) {
             val plugin = RateLimitingPlugin(configuration)
             
             pipeline.intercept(ApplicationCallPipeline.Plugins) {
-                val clientIP = call.request.headers["X-Forwarded-For"] 
-                    ?: call.request.local.remoteHost
-                
-                val path = call.request.path()
-                val method = call.request.httpMethod.value
-                
-                // Skip rate limiting for health checks and basic info endpoints
-                if (path == "/health" || path == "/api" || path.startsWith("/static")) {
-                    proceed()
-                    return@intercept
-                }
-                
-                val (limit, window) = when {
-                    path.startsWith("/api/v1/auth") -> configuration.authLimit to configuration.authWindowMinutes
-                    path.startsWith("/api/v1/chits") && method == "POST" -> configuration.sensitiveLimit to configuration.sensitiveWindowMinutes
-                    path.startsWith("/api/v1") -> configuration.apiLimit to configuration.apiWindowMinutes
-                    else -> configuration.globalLimit to configuration.globalWindowMinutes
-                }
-                
-                val key = "$clientIP:$path"
-                
-                if (!RateLimiter.isAllowed(key, limit, window)) {
-                    call.respond(
-                        HttpStatusCode.TooManyRequests,
-                        mapOf(
-                            "error" to "Rate limit exceeded",
-                            "message" to "Too many requests. Please try again later."
+                try {
+                    val clientIP = call.request.headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()
+                        ?: call.request.headers["X-Real-IP"]
+                        ?: call.request.local.remoteAddress
+                    
+                    val path = call.request.path()
+                    val method = call.request.httpMethod.value
+                    
+                    // Skip rate limiting for health checks and basic info endpoints
+                    if (path == "/health" || path == "/api" || path.startsWith("/static")) {
+                        proceed()
+                        return@intercept
+                    }
+                    
+                    val (limit, window) = when {
+                        path.startsWith("/api/v1/auth") -> configuration.authLimit to configuration.authWindowMinutes
+                        path.startsWith("/api/v1/chits") && method == "POST" -> configuration.sensitiveLimit to configuration.sensitiveWindowMinutes
+                        path.startsWith("/api/v1") -> configuration.apiLimit to configuration.apiWindowMinutes
+                        else -> configuration.globalLimit to configuration.globalWindowMinutes
+                    }
+                    
+                    val key = "$clientIP:$path"
+                    
+                    if (!RateLimiter.isAllowed(key, limit, window)) {
+                        call.respond(
+                            HttpStatusCode.TooManyRequests,
+                            mapOf(
+                                "error" to "Rate limit exceeded",
+                                "message" to "Too many requests. Please try again later."
+                            )
                         )
-                    )
-                    return@intercept
+                        return@intercept
+                    }
+                    
+                    proceed()
+                } catch (e: Exception) {
+                    // If rate limiting fails, log the error but allow the request to proceed
+                    application.log.warn("Rate limiting error for ${call.request.path()}: ${e.message}")
+                    proceed()
                 }
-                
-                proceed()
             }
             
             return plugin
