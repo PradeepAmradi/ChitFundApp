@@ -10,11 +10,7 @@ import java.io.File
 
 fun Application.configureRouting() {
     routing {
-        // Serve static web content
-        staticFiles("/", File("web")) {
-            default("index.html")
-        }
-        
+        // Basic API endpoints 
         get("/api") {
             call.respondText("Chit Fund Backend API - Version 1.0")
         }
@@ -33,6 +29,27 @@ fun Application.configureRouting() {
             authRoutes()
             chitRoutes()
             userRoutes()
+        }
+        
+        // Serve static web content with proper path resolution
+        try {
+            val webDir = File("web")
+            if (webDir.exists() && webDir.isDirectory) {
+                staticFiles("/", webDir) {
+                    default("index.html")
+                }
+            } else {
+                // Fallback: try relative path from project root  
+                val relativeWebDir = File("../web")
+                if (relativeWebDir.exists() && relativeWebDir.isDirectory) {
+                    staticFiles("/", relativeWebDir) {
+                        default("index.html")
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // If static file serving fails, log but don't crash the application
+            application.log.warn("Failed to configure static file serving: ${e.message}")
         }
     }
 }

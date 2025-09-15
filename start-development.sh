@@ -3,34 +3,49 @@
 echo "🚀 Starting ChitFund Development Environment"
 echo "============================================="
 
-# Start backend API server on port 8080
-echo "📡 Starting Backend API Server on port 8080..."
+# Start web development server on port 8080
+echo "🌐 Starting Web Development Server on port 8080..."
 cd web && python3 server.py &
-BACKEND_PID=$!
+WEB_PID=$!
 
-# Wait for backend to start
+# Wait for web server to start
 sleep 2
 
-# Test backend health
-echo "🔍 Testing backend health..."
+# Test web server health
+echo "🔍 Testing web server health..."
 curl -f http://localhost:8080/health > /dev/null 2>&1
 if [ $? -eq 0 ]; then
-    echo "✅ Backend API is running and healthy!"
+    echo "✅ Web server is running and healthy!"
 else
-    echo "❌ Backend API health check failed"
+    echo "❌ Web server health check failed"
 fi
 
-# Start frontend web server on port 3000
-echo "🌐 Starting Frontend Web Server on port 3000..."
+# Optional: Start backend API server on port 8081 if available
+echo "🔧 Attempting to start Backend API Server on port 8081..."
 cd ../
-python3 -m http.server 3000 -d web &
-FRONTEND_PID=$!
+./gradlew :backend:run -Dktor.deployment.port=8081 > backend.log 2>&1 &
+BACKEND_PID=$!
+
+# Wait a moment for backend to start (if it can)
+sleep 5
+
+# Test backend health (optional)
+curl -f http://localhost:8081/health > /dev/null 2>&1
+if [ $? -eq 0 ]; then
+    echo "✅ Backend API server is also running on port 8081!"
+    echo "📱 You can switch to Live Data mode in the app settings"
+else
+    echo "⚠️  Backend API server not available (this is okay)"
+    echo "📱 The app will work in Mock Data mode"
+    # Kill the backend process if it's not working
+    kill $BACKEND_PID 2>/dev/null
+fi
 
 echo ""
 echo "🎉 Development environment is ready!"
-echo "📱 Frontend: http://localhost:3000"
-echo "🔧 Backend API: http://localhost:8080"
-echo "🏥 Health Check: http://localhost:8080/health"
+echo "🌐 Web Application: http://localhost:8080"
+echo "📚 Application works in Mock Data mode by default"
+echo "⚙️  You can switch between Mock/Live data in the app settings"
 echo ""
 echo "Press Ctrl+C to stop all servers"
 
@@ -38,8 +53,8 @@ echo "Press Ctrl+C to stop all servers"
 cleanup() {
     echo ""
     echo "🛑 Stopping servers..."
+    kill $WEB_PID 2>/dev/null
     kill $BACKEND_PID 2>/dev/null
-    kill $FRONTEND_PID 2>/dev/null
     echo "✅ All servers stopped"
     exit 0
 }

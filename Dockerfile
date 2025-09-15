@@ -10,6 +10,7 @@ COPY web ./web
 
 EXPOSE 8080
 
-ENV DATABASE_URL=jdbc:postgresql://localhost:5432/chitfund
+# Use H2 database by default for Azure deployment (can be overridden with env vars)
+ENV DATABASE_URL=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
 
 CMD ["java", "-jar", "app.jar"]
