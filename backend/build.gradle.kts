@@ -38,6 +38,10 @@ kotlin {
                 implementation(libs.java.jwt)
                 implementation(libs.h2.database)
                 implementation(libs.logback)
+                // HTTP client for OAuth2 token exchange with Google/Microsoft
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.client.okhttp)
             }
         }
         val jvmTest by getting {

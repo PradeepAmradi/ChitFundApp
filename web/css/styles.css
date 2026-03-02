@@ -1299,3 +1299,105 @@ body {
     }
 }
 }
+
+/* ── OAuth Sign-In ────────────────────────────────────────────────────── */
+
+.oauth-divider {
+    display: flex;
+    align-items: center;
+    margin: 24px 0 18px;
+    color: #999;
+    font-size: 14px;
+}
+.oauth-divider::before,
+.oauth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e1e5e9;
+}
+.oauth-divider span {
+    padding: 0 14px;
+    white-space: nowrap;
+}
+
+.oauth-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-oauth {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex: 1;
+    justify-content: center;
+}
+.btn-oauth:hover {
+    border-color: #ccc;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+.btn-oauth:active {
+    transform: translateY(0);
+}
+.btn-oauth:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-google:hover {
+    border-color: #4285F4;
+}
+.btn-microsoft:hover {
+    border-color: #00A4EF;
+}
+
+.oauth-icon {
+    flex-shrink: 0;
+}
+
+/* Provider not-configured hint */
+.oauth-hint {
+    font-size: 12px;
+    color: #999;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* OAuth loading overlay */
+.oauth-loading {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.85);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    gap: 16px;
+}
+.oauth-loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #e1e5e9;
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+.oauth-loading p {
+    color: #555;
+    font-size: 16px;
+}

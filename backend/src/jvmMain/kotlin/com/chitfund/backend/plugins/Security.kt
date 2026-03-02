@@ -13,7 +13,7 @@ fun Application.configureSecurity() {
         header("Referrer-Policy", "strict-origin-when-cross-origin")
         header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
         
-        // Enhanced Content Security Policy with Google Fonts support
+        // Enhanced Content Security Policy with Google Fonts + OAuth provider support
         header("Content-Security-Policy", 
             "default-src 'self'; " +
             "script-src 'self' 'unsafe-inline' cdnjs.cloudflare.com; " +
@@ -21,6 +21,7 @@ fun Application.configureSecurity() {
             "img-src 'self' data: https:; " +
             "connect-src 'self' localhost:8080 chitfund-webapp.azurewebsites.net; " +
             "font-src 'self' cdnjs.cloudflare.com fonts.gstatic.com; " +
+            "form-action 'self' accounts.google.com login.microsoftonline.com; " +
             "object-src 'none'; " +
             "base-uri 'self'"
         )
@@ -31,10 +32,10 @@ fun Application.configureSecurity() {
             header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
         }
         
-        // Additional security headers for comprehensive protection
+        // Additional security headers
         header("X-Permitted-Cross-Domain-Policies", "none")
-        header("Cross-Origin-Embedder-Policy", "require-corp")
-        header("Cross-Origin-Opener-Policy", "same-origin")
-        header("Cross-Origin-Resource-Policy", "same-site")
+        // Note: COEP require-corp and COOP same-origin are intentionally omitted because
+        // they break the OAuth2 redirect flow with Google and Microsoft.
+        // The remaining CSP + security headers provide strong protection.
     }
 }

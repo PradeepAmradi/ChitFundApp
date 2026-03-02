@@ -56,6 +56,19 @@ object Payouts : UUIDTable() {
     val createdAt = datetime("created_at").default(LocalDateTime.now())
 }
 
+// OAuth linked accounts — tracks which providers a user has connected
+object OAuthAccounts : UUIDTable() {
+    val userId = uuid("user_id").references(Users.id)
+    val provider = varchar("provider", 50) // "google", "microsoft"
+    val providerId = varchar("provider_id", 255) // Provider's unique user ID
+    val providerEmail = varchar("provider_email", 255)
+    val createdAt = datetime("created_at").default(LocalDateTime.now())
+
+    init {
+        uniqueIndex(provider, providerId)
+    }
+}
+
 // Database enum classes
 enum class PayoutMethodDb { RANDOM, VOTING }
 enum class ChitStatusDb { OPEN, ACTIVE, CLOSED }

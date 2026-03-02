@@ -70,7 +70,7 @@ fun Application.configureDatabases() {
         val database = Database.connect(dataSource)
         
         transaction(database) {
-            SchemaUtils.create(Users, Chits, ChitMembers, Payments, Payouts)
+            SchemaUtils.create(Users, Chits, ChitMembers, Payments, Payouts, OAuthAccounts)
         }
         
         log.info("Database connection established and schema created successfully")

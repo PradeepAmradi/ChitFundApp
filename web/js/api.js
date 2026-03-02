@@ -546,6 +546,26 @@ class ApiClient {
             };
         }
         
+        // OAuth mock handlers
+        if (endpoint === '/auth/oauth/providers' && method === 'GET') {
+            return {
+                success: true,
+                data: [
+                    { name: 'google', enabled: false },
+                    { name: 'microsoft', enabled: false }
+                ]
+            };
+        }
+
+        if (endpoint === '/auth/oauth/exchange' && method === 'POST') {
+            return {
+                success: true,
+                token: "demo-token-123",
+                user: MOCK_DATA.user,
+                message: "OAuth login successful (mock)"
+            };
+        }
+
         if (endpoint.startsWith('/chits/') && endpoint.includes('/invite') && method === 'POST') {
             return {
                 success: true,
@@ -622,6 +642,30 @@ class AuthAPI extends ApiClient {
 
     async getUserProfile() {
         return this.get('/users/profile');
+    }
+
+    /** Exchange a one-time OAuth code for JWT tokens. */
+    async exchangeOAuthCode(code) {
+        return this.post('/auth/oauth/exchange', { code });
+    }
+
+    /** Get available OAuth providers (for UI button enable/disable). */
+    async getOAuthProviders() {
+        return this.get('/auth/oauth/providers');
+    }
+
+    /** Redirect the browser to start Google OAuth flow. */
+    startGoogleOAuth() {
+        const config = ConfigManager.getConfig();
+        const backendBaseUrl = config.baseURL.replace('/api/v1', '');
+        window.location.href = `${backendBaseUrl}/api/v1/auth/oauth/google`;
+    }
+
+    /** Redirect the browser to start Microsoft OAuth flow. */
+    startMicrosoftOAuth() {
+        const config = ConfigManager.getConfig();
+        const backendBaseUrl = config.baseURL.replace('/api/v1', '');
+        window.location.href = `${backendBaseUrl}/api/v1/auth/oauth/microsoft`;
     }
 }
 

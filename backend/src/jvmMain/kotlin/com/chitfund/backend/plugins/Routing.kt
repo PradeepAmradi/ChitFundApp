@@ -27,6 +27,7 @@ fun Application.configureRouting() {
         // API routes
         route("/api/v1") {
             authRoutes()
+            oauthRoutes()
             chitRoutes()
             userRoutes()
         }
