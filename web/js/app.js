@@ -97,6 +97,13 @@ class App {
     async checkAuthStatus() {
         const token = localStorage.getItem('authToken');
         if (token) {
+            // If in live mode but holding a mock token, force re-login
+            if (!API_CONFIG.useMockData && token === 'demo-token-123') {
+                localStorage.removeItem('authToken');
+                this.showLogin();
+                return;
+            }
+            
             // Ensure all API instances have the token
             authAPI.setToken(token);
             chitAPI.setToken(token);
@@ -686,30 +693,42 @@ class App {
             // Update toggle labels
             this.updateToggleLabels(useMockData);
             
-            // If switching to live data, test connection
+            // If switching to live data, test connection (warn but don't revert)
             if (!useMockData) {
-                await this.testBackendConnection();
+                try {
+                    await this.testBackendConnection();
+                } catch (connError) {
+                    console.warn('Backend connection test failed:', connError.message);
+                    Utils.showError(`Warning: Backend not reachable (${connError.message}). You are now in live mode — data calls will go to the server.`);
+                }
+            }
+            
+            // If switching from mock to live, clear the mock auth token so user re-authenticates
+            if (!useMockData) {
+                const currentToken = localStorage.getItem('authToken');
+                if (currentToken === 'demo-token-123') {
+                    localStorage.removeItem('authToken');
+                    this.isAuthenticated = false;
+                    this.currentUser = null;
+                    this.showLogin();
+                    Utils.showSuccess('Switched to live data mode. Please log in with your real credentials.');
+                    this.hideLoadingOverlay();
+                    return;
+                }
             }
             
             // Reload current page content
-            await this.loadPageContent(this.currentPage);
+            try {
+                await this.loadPageContent(this.currentPage);
+            } catch (loadError) {
+                console.warn('Page reload after toggle failed:', loadError.message);
+            }
             
             Utils.showSuccess(`Switched to ${useMockData ? 'mock' : 'live'} data mode`);
         } catch (error) {
             console.error('Error switching data mode:', error);
-            Utils.showError(`Failed to switch to live data: ${error.message}`);
-            
-            // Revert toggle state
-            const mockToggle = document.getElementById('mockDataToggle');
-            const settingsToggle = document.getElementById('settingsMockToggle');
-            if (mockToggle) {
-                mockToggle.checked = true;
-            }
-            if (settingsToggle) {
-                settingsToggle.checked = true;
-            }
-            ConfigManager.setMockData(true);
-            this.updateToggleLabels(true);
+            Utils.showError(`Error switching data mode: ${error.message}`);
+            // Do NOT revert — respect the user's choice
         } finally {
             this.hideLoadingOverlay();
         }
@@ -737,16 +756,29 @@ class App {
         
         try {
             // Try a simple endpoint to test connection
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
             const response = await fetch(`${ConfigManager.getConfig().baseURL.replace('/api/v1', '')}/health`, {
                 method: 'GET',
-                timeout: 5000
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId);
             
             if (!response.ok) {
                 throw new Error(`Server responded with status: ${response.status}`);
             }
+            
+            // Check if this is the real Ktor backend or the Python dev server
+            const data = await response.json();
+            if (data.backend === false || data.status === 'dev-server-only') {
+                throw new Error('Connected to Python dev server, not the real Ktor backend. Start backend with: ./gradlew :backend:run');
+            }
         } catch (error) {
-            if (error.name === 'TypeError') {
+            if (error.name === 'AbortError') {
+                throw new Error('Connection timed out. Backend server may not be running.');
+            } else if (error.name === 'TypeError') {
                 throw new Error('Cannot connect to backend server. Please ensure it is running.');
             }
             throw error;

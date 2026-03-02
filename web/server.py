@@ -52,15 +52,16 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
     
     def do_GET(self):
-        # Handle health endpoint
+        # Handle health endpoint — report as dev-server so frontend can distinguish
         if self.path == '/health':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             health_data = {
-                "status": "healthy",
-                "service": "ChitFund Backend API",
+                "status": "dev-server-only",
+                "service": "ChitFund Python Dev Server (NOT the real backend)",
                 "version": "1.0",
+                "backend": False,
                 "timestamp": int(time.time() * 1000)
             }
             self.wfile.write(json.dumps(health_data).encode())
@@ -71,7 +72,7 @@ class MyHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain')
             self.end_headers()
-            self.wfile.write(b"Chit Fund Backend API - Version 1.0")
+            self.wfile.write(b"ChitFund Dev Server - NOT the real backend. Start Ktor backend with: ./gradlew :backend:run")
             return
         
         # Handle API v1 endpoints - redirect to mock data mode

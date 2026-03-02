@@ -14,10 +14,15 @@ fun Application.configureHTTP() {
         allowHeader(HttpHeaders.ContentType)
         allowCredentials = true
         
-        // ✅ SECURE: Specify allowed origins instead of anyHost()
-        allowHost("localhost:3000") // Development frontend
-        allowHost("chitfund-webapp.azurewebsites.net", schemes = listOf("https")) // Production
-        allowHost("app.chitfund.com", schemes = listOf("https")) // Production domain if used
-        allowHost("chitfund-app.com", schemes = listOf("https")) // Production domain if used
+        // Development origins
+        allowHost("localhost:3000") // Web dev server
+        allowHost("localhost:8080") // Backend-served frontend
+        allowHost("127.0.0.1:8080")
+        allowHost("127.0.0.1:3000")
+        
+        // Production
+        allowHost("chitfund-webapp.azurewebsites.net", schemes = listOf("https"))
+        allowHost("app.chitfund.com", schemes = listOf("https"))
+        allowHost("chitfund-app.com", schemes = listOf("https"))
     }
 }

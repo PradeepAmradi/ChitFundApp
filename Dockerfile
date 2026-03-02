@@ -10,7 +10,9 @@ COPY web ./web
 
 EXPOSE 8080
 
-# Use H2 database by default for Azure deployment (can be overridden with env vars)
-ENV DATABASE_URL=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+# Database URL must be set via environment variables for production.
+# Falls back to H2 in-memory ONLY if no DATABASE_URL is provided at runtime.
+# To use PostgreSQL, set DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD env vars.
+# ENV DATABASE_URL=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
 
 CMD ["java", "-jar", "app.jar"]
