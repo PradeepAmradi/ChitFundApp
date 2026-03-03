@@ -3,9 +3,9 @@ const API_CONFIG = {
     baseURL: `${window.location.origin}/api/v1`,
     timeout: 10000,
     get useMockData() {
-        // Get from localStorage, default to true if not set
+        // Get from localStorage, default to false (use real backend)
         const saved = localStorage.getItem('useMockData');
-        return saved !== null ? JSON.parse(saved) : true;
+        return saved !== null ? JSON.parse(saved) : false;
     },
     set useMockData(value) {
         localStorage.setItem('useMockData', JSON.stringify(value));
