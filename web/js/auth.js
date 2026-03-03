@@ -166,11 +166,7 @@ class AuthManager {
 
         try {
             // Always call the real backend (not mock) for provider info
-            const config = ConfigManager.getConfig();
-            const configuredBaseUrl = config.baseURL.replace('/api/v1', '');
-            const isConfiguredLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBaseUrl);
-            const isCurrentHostLocal = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-            const baseUrl = (!isCurrentHostLocal && isConfiguredLocalhost) ? window.location.origin : configuredBaseUrl;
+            const baseUrl = ConfigManager.resolveBackendBaseUrl();
 
             const controller = new AbortController();
             const timeoutId  = setTimeout(() => controller.abort(), 4000);

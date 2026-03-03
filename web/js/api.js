@@ -62,6 +62,14 @@ class ConfigManager {
             detail: { useMockData: API_CONFIG.useMockData }
         }));
     }
+
+    static resolveBackendBaseUrl() {
+        const config = ConfigManager.getConfig();
+        const configuredBaseUrl = config.baseURL.replace('/api/v1', '');
+        const isConfiguredLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|::1)(:\d+)?$/i.test(configuredBaseUrl);
+        const isCurrentHostLocal = /^(localhost|127\.0\.0\.1|::1|\[::1\])$/i.test(window.location.hostname);
+        return (!isCurrentHostLocal && isConfiguredLocalhost) ? window.location.origin : configuredBaseUrl;
+    }
 }
 
 // Mock data for development/demo purposes
@@ -656,21 +664,13 @@ class AuthAPI extends ApiClient {
 
     /** Redirect the browser to start Google OAuth flow. */
     startGoogleOAuth() {
-        const config = ConfigManager.getConfig();
-        const configuredBaseUrl = config.baseURL.replace('/api/v1', '');
-        const isConfiguredLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBaseUrl);
-        const isCurrentHostLocal = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-        const backendBaseUrl = (!isCurrentHostLocal && isConfiguredLocalhost) ? window.location.origin : configuredBaseUrl;
+        const backendBaseUrl = ConfigManager.resolveBackendBaseUrl();
         window.location.href = `${backendBaseUrl}/api/v1/auth/oauth/google`;
     }
 
     /** Redirect the browser to start Microsoft OAuth flow. */
     startMicrosoftOAuth() {
-        const config = ConfigManager.getConfig();
-        const configuredBaseUrl = config.baseURL.replace('/api/v1', '');
-        const isConfiguredLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBaseUrl);
-        const isCurrentHostLocal = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
-        const backendBaseUrl = (!isCurrentHostLocal && isConfiguredLocalhost) ? window.location.origin : configuredBaseUrl;
+        const backendBaseUrl = ConfigManager.resolveBackendBaseUrl();
         window.location.href = `${backendBaseUrl}/api/v1/auth/oauth/microsoft`;
     }
 }
