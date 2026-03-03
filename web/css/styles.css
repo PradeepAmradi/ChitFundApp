@@ -213,7 +213,7 @@ body {
     margin-bottom: 24px;
 }
 
-.floating-label input {
+.form-group.floating-label input {
     width: 100%;
     padding: 16px 16px 16px 44px;
     border: 2px solid #e5e7eb;
@@ -224,7 +224,7 @@ body {
     color: #1a1a2e;
 }
 
-.floating-label input:focus {
+.form-group.floating-label input:focus {
     outline: none;
     border-color: #4f46e5;
     background: #fff;
