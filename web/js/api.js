@@ -657,14 +657,20 @@ class AuthAPI extends ApiClient {
     /** Redirect the browser to start Google OAuth flow. */
     startGoogleOAuth() {
         const config = ConfigManager.getConfig();
-        const backendBaseUrl = config.baseURL.replace('/api/v1', '');
+        const configuredBaseUrl = config.baseURL.replace('/api/v1', '');
+        const isConfiguredLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBaseUrl);
+        const isCurrentHostLocal = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+        const backendBaseUrl = (!isCurrentHostLocal && isConfiguredLocalhost) ? window.location.origin : configuredBaseUrl;
         window.location.href = `${backendBaseUrl}/api/v1/auth/oauth/google`;
     }
 
     /** Redirect the browser to start Microsoft OAuth flow. */
     startMicrosoftOAuth() {
         const config = ConfigManager.getConfig();
-        const backendBaseUrl = config.baseURL.replace('/api/v1', '');
+        const configuredBaseUrl = config.baseURL.replace('/api/v1', '');
+        const isConfiguredLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(configuredBaseUrl);
+        const isCurrentHostLocal = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+        const backendBaseUrl = (!isCurrentHostLocal && isConfiguredLocalhost) ? window.location.origin : configuredBaseUrl;
         window.location.href = `${backendBaseUrl}/api/v1/auth/oauth/microsoft`;
     }
 }
