@@ -24,16 +24,68 @@ class AuthManager {
             this.showLoginForm();
         });
 
-        // Auto-focus on OTP input when shown
-        const otpInput = document.getElementById('otp');
-        if (otpInput) {
-            otpInput.addEventListener('input', (e) => {
-                // Auto-submit when 6 digits are entered
-                if (e.target.value.length === 6) {
-                    document.getElementById('otpForm').dispatchEvent(new Event('submit'));
+        // Resend OTP link
+        document.getElementById('resend-otp')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('loginForm')?.dispatchEvent(new Event('submit'));
+        });
+
+        // ── OTP digit-box behaviour ──────────────────────────────────────
+        this.setupOtpDigitBoxes();
+    }
+
+    /** Wire up OTP individual digit inputs with auto-advance, backspace & paste. */
+    setupOtpDigitBoxes() {
+        const digits = document.querySelectorAll('.otp-digit');
+        if (!digits.length) return;
+
+        const syncHidden = () => {
+            const val = Array.from(digits).map(d => d.value).join('');
+            const hidden = document.getElementById('otp');
+            if (hidden) hidden.value = val;
+            // Mark filled state
+            digits.forEach(d => d.classList.toggle('filled', d.value !== ''));
+            // Auto-submit when all 6 filled
+            if (val.length === 6) {
+                document.getElementById('otpForm')?.dispatchEvent(new Event('submit'));
+            }
+        };
+
+        digits.forEach((input, idx) => {
+            input.addEventListener('input', (e) => {
+                // Keep only last digit
+                input.value = input.value.replace(/\D/g, '').slice(-1);
+                syncHidden();
+                if (input.value && idx < digits.length - 1) {
+                    digits[idx + 1].focus();
                 }
             });
-        }
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && idx > 0) {
+                    digits[idx - 1].focus();
+                    digits[idx - 1].value = '';
+                    syncHidden();
+                }
+                if (e.key === 'ArrowLeft' && idx > 0) digits[idx - 1].focus();
+                if (e.key === 'ArrowRight' && idx < digits.length - 1) digits[idx + 1].focus();
+            });
+
+            // Select content on focus for easy overwrite
+            input.addEventListener('focus', () => input.select());
+        });
+
+        // Handle paste on any digit
+        digits[0]?.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+            pasted.split('').forEach((ch, i) => {
+                if (digits[i]) digits[i].value = ch;
+            });
+            syncHidden();
+            const nextEmpty = Array.from(digits).findIndex(d => !d.value);
+            (digits[nextEmpty >= 0 ? nextEmpty : 5])?.focus();
+        });
     }
 
     // ── OAuth callback detection ──────────────────────────────────────────
@@ -296,9 +348,13 @@ class AuthManager {
         document.getElementById('otp-form').classList.add('hidden');
         Utils.hideMessages();
         
-        // Clear form
+        // Clear forms
         document.getElementById('loginForm').reset();
         document.getElementById('otpForm').reset();
+        // Clear OTP digit boxes
+        document.querySelectorAll('.otp-digit').forEach(d => { d.value = ''; d.classList.remove('filled'); });
+        const hidden = document.getElementById('otp');
+        if (hidden) hidden.value = '';
         
         // Focus on email input
         document.getElementById('email').focus();
@@ -310,10 +366,14 @@ class AuthManager {
         document.getElementById('otp-form').classList.remove('hidden');
         
         // Update message
-        document.getElementById('otp-message').textContent = `OTP has been sent to: ${email}`;
+        document.getElementById('otp-message').textContent = `We sent a 6-digit code to ${email}`;
         
-        // Focus on OTP input
-        document.getElementById('otp').focus();
+        // Clear and focus first OTP digit
+        document.querySelectorAll('.otp-digit').forEach(d => { d.value = ''; d.classList.remove('filled'); });
+        const hidden = document.getElementById('otp');
+        if (hidden) hidden.value = '';
+        const firstDigit = document.querySelector('.otp-digit[data-index="0"]');
+        if (firstDigit) firstDigit.focus();
     }
 }
 
