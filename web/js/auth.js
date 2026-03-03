@@ -166,8 +166,7 @@ class AuthManager {
 
         try {
             // Always call the real backend (not mock) for provider info
-            const config = ConfigManager.getConfig();
-            const baseUrl = config.baseURL.replace('/api/v1', '');
+            const baseUrl = ConfigManager.resolveBackendBaseUrl();
 
             const controller = new AbortController();
             const timeoutId  = setTimeout(() => controller.abort(), 4000);
