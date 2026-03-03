@@ -1,6 +1,6 @@
 // API Configuration
 const API_CONFIG = {
-    baseURL: 'http://localhost:8080/api/v1',
+    baseURL: `${window.location.origin}/api/v1`,
     timeout: 10000,
     get useMockData() {
         // Get from localStorage, default to true if not set
