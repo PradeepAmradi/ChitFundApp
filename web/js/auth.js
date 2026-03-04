@@ -208,12 +208,6 @@ class AuthManager {
      * Navigates the browser to the backend, which redirects to the provider.
      */
     handleOAuthLogin(provider) {
-        if (API_CONFIG.useMockData) {
-            // For mock mode, simulate an OAuth login
-            this.simulateMockOAuth(provider);
-            return;
-        }
-
         switch (provider) {
             case 'google':
                 authAPI.startGoogleOAuth();
@@ -224,6 +218,11 @@ class AuthManager {
             default:
                 Utils.showError('Unknown OAuth provider');
         }
+    }
+
+    handleMockModeLogin() {
+        ConfigManager.setMockData(true);
+        this.simulateMockOAuth('mock mode');
     }
 
     /** Mock-mode OAuth simulation so the demo still works. */
