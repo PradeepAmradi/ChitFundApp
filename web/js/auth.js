@@ -208,9 +208,6 @@ class AuthManager {
      * Navigates the browser to the backend, which redirects to the provider.
      */
     handleOAuthLogin(provider) {
-        // OAuth always requires the live backend, even if mock mode is enabled.
-        if (API_CONFIG.useMockData) ConfigManager.setMockData(false);
-
         switch (provider) {
             case 'google':
                 authAPI.startGoogleOAuth();
