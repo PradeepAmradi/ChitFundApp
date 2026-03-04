@@ -220,6 +220,11 @@ class AuthManager {
         }
     }
 
+    handleMockModeLogin() {
+        ConfigManager.setMockData(true);
+        this.simulateMockOAuth('mock mode');
+    }
+
     /** Mock-mode OAuth simulation so the demo still works. */
     simulateMockOAuth(provider) {
         this.showOAuthLoading(`Signing in with ${provider}…`);
