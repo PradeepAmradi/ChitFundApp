@@ -19,8 +19,8 @@ import java.util.*
 private fun ApplicationCall.requestBaseUrl(): String {
     val forwardedProto = request.headers["X-Forwarded-Proto"]?.substringBefore(',')?.trim()
     val forwardedHost = request.headers["X-Forwarded-Host"]?.substringBefore(',')?.trim()
-    val scheme = if (forwardedProto.isNullOrBlank()) request.origin.scheme else forwardedProto
-    val host = if (forwardedHost.isNullOrBlank()) request.headers[HttpHeaders.Host] ?: request.origin.host else forwardedHost
+    val scheme = if (forwardedProto.isNullOrBlank()) request.local.scheme else forwardedProto
+    val host = if (forwardedHost.isNullOrBlank()) request.headers[HttpHeaders.Host] ?: request.local.host else forwardedHost
     return "$scheme://$host".trimEnd('/')
 }
 
