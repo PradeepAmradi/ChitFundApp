@@ -40,8 +40,8 @@ class OAuthService(
     private val microsoftClientId: String = System.getenv("MICROSOFT_CLIENT_ID") ?: "",
     private val microsoftClientSecret: String = System.getenv("MICROSOFT_CLIENT_SECRET") ?: "",
     private val microsoftTenantId: String = System.getenv("MICROSOFT_TENANT_ID") ?: "common",
-    private val baseUrl: String = System.getenv("APP_BASE_URL") ?: "http://localhost:8080",
-    private val frontendUrl: String = System.getenv("FRONTEND_URL") ?: System.getenv("APP_BASE_URL") ?: "http://localhost:8080"
+    private val configuredBaseUrl: String? = System.getenv("APP_BASE_URL"),
+    private val configuredFrontendUrl: String? = System.getenv("FRONTEND_URL") ?: System.getenv("APP_BASE_URL")
 ) {
 
     // ── Constants ────────────────────────────────────────────────────────────
@@ -176,12 +176,28 @@ class OAuthService(
         exchangeCodes.entries.removeIf { it.value.expiresAt < now }
     }
 
+    private fun normalizeBaseUrl(url: String?): String? {
+        val normalized = url?.trim()?.trimEnd('/')
+        return if (normalized.isNullOrBlank()) null else normalized
+    }
+
+    private fun resolveBaseUrl(requestBaseUrl: String?): String =
+        normalizeBaseUrl(requestBaseUrl)
+            ?: normalizeBaseUrl(configuredBaseUrl)
+            ?: "http://localhost:8080"
+
+    private fun resolveFrontendUrl(requestFrontendUrl: String?): String =
+        normalizeBaseUrl(configuredFrontendUrl)
+            ?: normalizeBaseUrl(configuredBaseUrl)
+            ?: normalizeBaseUrl(requestFrontendUrl)
+            ?: "http://localhost:8080"
+
     // ══════════════════════════════════════════════════════════════════════════
     //  GOOGLE
     // ══════════════════════════════════════════════════════════════════════════
 
     /** Step 1: Build the Google authorization URL and return it. */
-    fun buildGoogleAuthUrl(): String {
+    fun buildGoogleAuthUrl(requestBaseUrl: String? = null): String {
         cleanupExpired()
         require(isGoogleConfigured()) { "Google OAuth is not configured" }
 
@@ -191,7 +207,7 @@ class OAuthService(
 
         oauthStates[state] = OAuthStateData(provider = "google", codeVerifier = codeVerifier)
 
-        val callbackUrl = "$baseUrl/api/v1/auth/oauth/google/callback"
+        val callbackUrl = "${resolveBaseUrl(requestBaseUrl)}/api/v1/auth/oauth/google/callback"
 
         return URLBuilder(GOOGLE_AUTH_URL).apply {
             parameters.append("client_id",             googleClientId)
@@ -211,7 +227,7 @@ class OAuthService(
      * Validates state, exchanges code for tokens, fetches userinfo,
      * returns a one-time exchange code to embed in the redirect URL.
      */
-    suspend fun handleGoogleCallback(code: String, state: String): String {
+    suspend fun handleGoogleCallback(code: String, state: String, requestBaseUrl: String? = null): String {
         // Validate state
         val stateData = oauthStates.remove(state)
             ?: throw SecurityException("Invalid or expired OAuth state")
@@ -219,7 +235,7 @@ class OAuthService(
         if (stateData.expiresAt < System.currentTimeMillis()) throw SecurityException("OAuth state expired")
 
         // Exchange authorization code for tokens
-        val callbackUrl = "$baseUrl/api/v1/auth/oauth/google/callback"
+        val callbackUrl = "${resolveBaseUrl(requestBaseUrl)}/api/v1/auth/oauth/google/callback"
 
         val tokenResponse: GoogleTokenResponse = httpClient.submitForm(
             url = GOOGLE_TOKEN_URL,
@@ -257,7 +273,7 @@ class OAuthService(
     // ══════════════════════════════════════════════════════════════════════════
 
     /** Step 1: Build the Microsoft authorization URL. */
-    fun buildMicrosoftAuthUrl(): String {
+    fun buildMicrosoftAuthUrl(requestBaseUrl: String? = null): String {
         cleanupExpired()
         require(isMicrosoftConfigured()) { "Microsoft OAuth is not configured" }
 
@@ -267,7 +283,7 @@ class OAuthService(
 
         oauthStates[state] = OAuthStateData(provider = "microsoft", codeVerifier = codeVerifier)
 
-        val callbackUrl = "$baseUrl/api/v1/auth/oauth/microsoft/callback"
+        val callbackUrl = "${resolveBaseUrl(requestBaseUrl)}/api/v1/auth/oauth/microsoft/callback"
 
         return URLBuilder(microsoftAuthUrl(microsoftTenantId)).apply {
             parameters.append("client_id",             microsoftClientId)
@@ -283,13 +299,13 @@ class OAuthService(
     }
 
     /** Step 2: Handle Microsoft callback. */
-    suspend fun handleMicrosoftCallback(code: String, state: String): String {
+    suspend fun handleMicrosoftCallback(code: String, state: String, requestBaseUrl: String? = null): String {
         val stateData = oauthStates.remove(state)
             ?: throw SecurityException("Invalid or expired OAuth state")
         if (stateData.provider != "microsoft") throw SecurityException("Provider mismatch")
         if (stateData.expiresAt < System.currentTimeMillis()) throw SecurityException("OAuth state expired")
 
-        val callbackUrl = "$baseUrl/api/v1/auth/oauth/microsoft/callback"
+        val callbackUrl = "${resolveBaseUrl(requestBaseUrl)}/api/v1/auth/oauth/microsoft/callback"
 
         val tokenResponse: MicrosoftTokenResponse = httpClient.submitForm(
             url = microsoftTokenUrl(microsoftTenantId),
@@ -347,10 +363,10 @@ class OAuthService(
     }
 
     /** Frontend redirect URL with the one-time code embedded in the hash. */
-    fun buildFrontendRedirectUrl(exchangeCode: String): String =
-        "$frontendUrl/#oauth-callback=$exchangeCode"
+    fun buildFrontendRedirectUrl(exchangeCode: String, requestFrontendUrl: String? = null): String =
+        "${resolveFrontendUrl(requestFrontendUrl)}/#oauth-callback=$exchangeCode"
 
     /** Frontend redirect URL for error notification. */
-    fun buildFrontendErrorUrl(error: String): String =
-        "$frontendUrl/#oauth-error=${java.net.URLEncoder.encode(error, "UTF-8")}"
+    fun buildFrontendErrorUrl(error: String, requestFrontendUrl: String? = null): String =
+        "${resolveFrontendUrl(requestFrontendUrl)}/#oauth-error=${java.net.URLEncoder.encode(error, "UTF-8")}"
 }

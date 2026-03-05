@@ -16,6 +16,14 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDateTime
 import java.util.*
 
+private fun ApplicationCall.requestBaseUrl(): String {
+    val forwardedProto = request.headers["X-Forwarded-Proto"]?.substringBefore(',')?.trim()
+    val forwardedHost = request.headers["X-Forwarded-Host"]?.substringBefore(',')?.trim()
+    val scheme = if (forwardedProto.isNullOrBlank()) request.origin.scheme else forwardedProto
+    val host = if (forwardedHost.isNullOrBlank()) request.headers[HttpHeaders.Host] ?: request.origin.host else forwardedHost
+    return "$scheme://$host".trimEnd('/')
+}
+
 @Serializable
 data class OAuthExchangeRequest(val code: String)
 
@@ -63,7 +71,7 @@ fun Route.oauthRoutes() {
                 return@get
             }
             try {
-                val authUrl = oauthService.buildGoogleAuthUrl()
+                val authUrl = oauthService.buildGoogleAuthUrl(call.requestBaseUrl())
                 call.respondRedirect(authUrl)
             } catch (e: Exception) {
                 application.log.error("Failed to build Google auth URL", e)
@@ -76,29 +84,30 @@ fun Route.oauthRoutes() {
 
         /** Google redirects the user back here after consent. */
         get("/google/callback") {
+            val requestBaseUrl = call.requestBaseUrl()
             val code  = call.request.queryParameters["code"]
             val state = call.request.queryParameters["state"]
             val error = call.request.queryParameters["error"]
 
             if (error != null) {
                 application.log.warn("Google OAuth error: $error")
-                call.respondRedirect(oauthService.buildFrontendErrorUrl("Google sign-in was cancelled or failed: $error"))
+                call.respondRedirect(oauthService.buildFrontendErrorUrl("Google sign-in was cancelled or failed: $error", requestBaseUrl))
                 return@get
             }
             if (code.isNullOrBlank() || state.isNullOrBlank()) {
-                call.respondRedirect(oauthService.buildFrontendErrorUrl("Missing authorization code or state parameter"))
+                call.respondRedirect(oauthService.buildFrontendErrorUrl("Missing authorization code or state parameter", requestBaseUrl))
                 return@get
             }
 
             try {
-                val exchangeCode = oauthService.handleGoogleCallback(code, state)
-                call.respondRedirect(oauthService.buildFrontendRedirectUrl(exchangeCode))
+                val exchangeCode = oauthService.handleGoogleCallback(code, state, requestBaseUrl)
+                call.respondRedirect(oauthService.buildFrontendRedirectUrl(exchangeCode, requestBaseUrl))
             } catch (e: SecurityException) {
                 application.log.warn("Google OAuth security error: ${e.message}")
-                call.respondRedirect(oauthService.buildFrontendErrorUrl("Security validation failed: ${e.message}"))
+                call.respondRedirect(oauthService.buildFrontendErrorUrl("Security validation failed: ${e.message}", requestBaseUrl))
             } catch (e: Exception) {
                 application.log.error("Google OAuth callback error", e)
-                call.respondRedirect(oauthService.buildFrontendErrorUrl("Google sign-in failed: ${e.message}"))
+                call.respondRedirect(oauthService.buildFrontendErrorUrl("Google sign-in failed: ${e.message}", requestBaseUrl))
             }
         }
 
@@ -115,7 +124,7 @@ fun Route.oauthRoutes() {
                 return@get
             }
             try {
-                val authUrl = oauthService.buildMicrosoftAuthUrl()
+                val authUrl = oauthService.buildMicrosoftAuthUrl(call.requestBaseUrl())
                 call.respondRedirect(authUrl)
             } catch (e: Exception) {
                 application.log.error("Failed to build Microsoft auth URL", e)
@@ -127,6 +136,7 @@ fun Route.oauthRoutes() {
         }
 
         get("/microsoft/callback") {
+            val requestBaseUrl = call.requestBaseUrl()
             val code  = call.request.queryParameters["code"]
             val state = call.request.queryParameters["state"]
             val error = call.request.queryParameters["error"]
@@ -134,23 +144,23 @@ fun Route.oauthRoutes() {
             if (error != null) {
                 val desc = call.request.queryParameters["error_description"] ?: error
                 application.log.warn("Microsoft OAuth error: $desc")
-                call.respondRedirect(oauthService.buildFrontendErrorUrl("Microsoft sign-in was cancelled or failed: $desc"))
+                call.respondRedirect(oauthService.buildFrontendErrorUrl("Microsoft sign-in was cancelled or failed: $desc", requestBaseUrl))
                 return@get
             }
             if (code.isNullOrBlank() || state.isNullOrBlank()) {
-                call.respondRedirect(oauthService.buildFrontendErrorUrl("Missing authorization code or state parameter"))
+                call.respondRedirect(oauthService.buildFrontendErrorUrl("Missing authorization code or state parameter", requestBaseUrl))
                 return@get
             }
 
             try {
-                val exchangeCode = oauthService.handleMicrosoftCallback(code, state)
-                call.respondRedirect(oauthService.buildFrontendRedirectUrl(exchangeCode))
+                val exchangeCode = oauthService.handleMicrosoftCallback(code, state, requestBaseUrl)
+                call.respondRedirect(oauthService.buildFrontendRedirectUrl(exchangeCode, requestBaseUrl))
             } catch (e: SecurityException) {
                 application.log.warn("Microsoft OAuth security error: ${e.message}")
-                call.respondRedirect(oauthService.buildFrontendErrorUrl("Security validation failed: ${e.message}"))
+                call.respondRedirect(oauthService.buildFrontendErrorUrl("Security validation failed: ${e.message}", requestBaseUrl))
             } catch (e: Exception) {
                 application.log.error("Microsoft OAuth callback error", e)
-                call.respondRedirect(oauthService.buildFrontendErrorUrl("Microsoft sign-in failed: ${e.message}"))
+                call.respondRedirect(oauthService.buildFrontendErrorUrl("Microsoft sign-in failed: ${e.message}", requestBaseUrl))
             }
         }
 
